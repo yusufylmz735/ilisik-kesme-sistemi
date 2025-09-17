@@ -1,0 +1,389 @@
+﻿@model List<HayataAtilmaFormu.Models.OnayDetay>
+@{
+    ViewData["Title"] = "Başvurular";
+    var durum = ViewBag.Durum as string ?? "Tumu";
+}
+
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="text-primary mb-1">Başvuru Listesi</h2>
+                    <p class="text-muted mb-0">
+                        @switch (durum)
+                        {
+                            case "Beklemede":
+                                <text>Onayınızı bekleyen başvurular</text>
+                                break;
+                            case "Onaylandi":
+                                <text>Onayladığınız başvurular</text>
+                                break;
+                            case "Reddedildi":
+                                <text>Reddettiğiniz başvurular</text>
+                                break;
+                            default:
+                                <text>Tüm başvurular</text>
+                                break;
+                        }
+                    </p>
+                </div>
+                <a href="@Url.Action("Index", "Yetkili")" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Ana Sayfa
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtre Sekmeler -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <ul class="nav nav-pills">
+                        <li class="nav-item">
+                            <a class="nav-link @(durum == "Tumu" ? "active" : "")"
+                               href="@Url.Action("Basvurular", "Yetkili", new { durum = "Tumu" })">
+                                <i class="fas fa-list me-2"></i>Tümü (@Model?.Count ?? 0)
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link @(durum == "Beklemede" ? "active" : "")"
+                               href="@Url.Action("Basvurular", "Yetkili", new { durum = "Beklemede" })">
+                                <i class="fas fa-clock me-2"></i>Bekleyen
+                                (@Model?.Count(x => x.Durum == "Beklemede") ?? 0)
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link @(durum == "Onaylandi" ? "active" : "")"
+                               href="@Url.Action("Basvurular", "Yetkili", new { durum = "Onaylandi" })">
+                                <i class="fas fa-check-circle me-2"></i>Onaylanan
+                                (@Model?.Count(x => x.Durum == "Onaylandi") ?? 0)
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link @(durum == "Reddedildi" ? "active" : "")"
+                               href="@Url.Action("Basvurular", "Yetkili", new { durum = "Reddedildi" })">
+                                <i class="fas fa-times-circle me-2"></i>Reddedilen
+                                (@Model?.Count(x => x.Durum == "Reddedildi") ?? 0)
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Başvuru Tablosu -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-table me-2"></i>
+                            Başvurular (@Model?.Count ?? 0)
+                        </h5>
+
+                        <!-- Arama kutusu -->
+                        <div class="input-group" style="width: 300px;">
+                            <input type="text" class="form-control" id="searchInput"
+                                   placeholder="Öğrenci adı, no veya bölüm ara...">
+                            <span class="input-group-text">
+                                <i class="fas fa-search"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body p-0">
+                    @if (Model?.Any() == true)
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0" id="basvuruTable">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Öğrenci Bilgileri</th>
+                                        <th>Bölüm</th>
+                                        <th>Başvuru Türü</th>
+                                        <th>Başvuru Tarihi</th>
+                                        <th>Durum</th>
+                                        <th>Beklemede</th>
+                                        <th>İşlemler</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in Model)
+                                    {
+                                        var beklemeSuresi = item.Durum == "Beklemede" ?
+                                        (DateTime.Now - item.Basvuru.BasvuruTarihi).Days : 0;
+
+                                        <tr>
+                                            <td>
+                                                <div>
+                                                    <strong>@item.Basvuru.Ogrenci.TamAd</strong>
+                                                    <br>
+                                                    <small class="text-muted">@item.Basvuru.Ogrenci.OgrenciNo</small>
+                                                    <br>
+                                                    <small class="text-muted">@item.Basvuru.Ogrenci.Email</small>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div>
+                                                    <strong>@item.Basvuru.Ogrenci.Bolum.BolumAdi</strong>
+                                                    <br>
+                                                    <small class="text-muted">@item.Basvuru.Ogrenci.Fakulte.FakulteAdi</small>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-primary fs-6">
+                                                    @item.Basvuru.BasvuruTuru
+                                                </span>
+                                            </td>
+                                            <td>
+                                                @item.Basvuru.BasvuruTarihi.ToString("dd.MM.yyyy")
+                                                <br>
+                                                <small class="text-muted">
+                                                    @item.Basvuru.BasvuruTarihi.ToString("HH:mm")
+                                                </small>
+                                            </td>
+                                            <td>
+                                                @switch (item.Durum)
+                                                {
+                                                    case "Beklemede":
+                                                        <span class="badge bg-warning text-dark">
+                                                            <i class="fas fa-clock me-1"></i>Beklemede
+                                                        </span>
+                                                        break;
+                                                    case "Onaylandi":
+                                                        <span class="badge bg-success">
+                                                            <i class="fas fa-check me-1"></i>Onaylandı
+                                                        </span>
+                                                        break;
+                                                    case "Reddedildi":
+                                                        <span class="badge bg-danger">
+                                                            <i class="fas fa-times me-1"></i>Reddedildi
+                                                        </span>
+                                                        break;
+                                                }
+
+                                                @if (item.OnayTarihi.HasValue)
+                                                {
+                                                    <br>
+                                                    <small class="text-muted">
+                                                        @item.OnayTarihi.Value.ToString("dd.MM.yyyy HH:mm")
+                                                    </small>
+                                                }
+                                            </td>
+                                            <td>
+                                                @if (item.Durum == "Beklemede")
+                                                {
+                                                    <span class="badge @(beklemeSuresi > 5 ? "bg-danger" : beklemeSuresi > 2 ? "bg-warning text-dark" : "bg-success")">
+                                                        @beklemeSuresi gün
+                                                    </span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted">-</span>
+                                                }
+                                            </td>
+                                            <td>
+                                                <div class="btn-group btn-group-sm">
+                                                    <a href="@Url.Action("BasvuruDetay", "Yetkili", new { id = item.Basvuru.Id })"
+                                                       class="btn btn-outline-primary" title="Detay Görüntüle">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+
+                                                    @if (item.Durum == "Beklemede")
+                                                    {
+                                                        <button type="button" class="btn btn-outline-success"
+                                                                onclick="showApprovalModal(@item.Basvuru.Id, 'Onaylandi', '@item.Basvuru.Ogrenci.TamAd', '@item.Basvuru.BasvuruTuru')"
+                                                                title="Onayla">
+                                                            <i class="fas fa-check"></i>
+                                                        </button>
+                                                        <button type="button" class="btn btn-outline-danger"
+                                                                onclick="showApprovalModal(@item.Basvuru.Id, 'Reddedildi', '@item.Basvuru.Ogrenci.TamAd', '@item.Basvuru.BasvuruTuru')"
+                                                                title="Reddet">
+                                                            <i class="fas fa-times"></i>
+                                                        </button>
+                                                    }
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-5">
+                            <i class="fas fa-inbox fa-4x text-muted mb-3"></i>
+                            <h4 class="text-muted">Başvuru bulunmuyor</h4>
+                            <p class="text-muted">
+                                @switch (durum)
+                                {
+                                    case "Beklemede":
+                                        <text>Onayınızı bekleyen başvuru bulunmamaktadır.</text>
+                                        break;
+                                    case "Onaylandi":
+                                        <text>Henüz onayladığınız başvuru bulunmamaktadır.</text>
+                                        break;
+                                    case "Reddedildi":
+                                        <text>Henüz reddettiğiniz başvuru bulunmamaktadır.</text>
+                                        break;
+                                    default:
+                                        <text>Henüz başvuru bulunmamaktadır.</text>
+                                        break;
+                                }
+                            </p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Onay/Red Modal -->
+<div class="modal fade" id="approvalModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTitle"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="approvalForm">
+                @Html.AntiForgeryToken()
+                <div class="modal-body">
+                    <input type="hidden" id="basvuruId" name="basvuruId">
+                    <input type="hidden" id="karar" name="karar">
+
+                    <div class="alert" id="modalAlert">
+                        <strong id="modalAlertText"></strong>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="aciklama" class="form-label">Açıklama (İsteğe bağlı):</label>
+                        <textarea class="form-control" id="aciklama" name="aciklama" rows="3"
+                                  placeholder="İşlem ile ilgili açıklamanızı yazabilirsiniz..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                    <button type="submit" class="btn" id="confirmBtn">Onayla</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Arama işlevi
+    document.getElementById('searchInput').addEventListener('keyup', function() {
+        const searchTerm = this.value.toLowerCase();
+        const tableRows = document.querySelectorAll('#basvuruTable tbody tr');
+
+        tableRows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            if (text.includes(searchTerm)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    });
+
+    // Onay/Red modal açma
+    function showApprovalModal(basvuruId, karar, ogrenciAdi, basvuruTuru) {
+        const modal = document.getElementById('approvalModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalAlert = document.getElementById('modalAlert');
+        const modalAlertText = document.getElementById('modalAlertText');
+        const confirmBtn = document.getElementById('confirmBtn');
+
+        document.getElementById('basvuruId').value = basvuruId;
+        document.getElementById('karar').value = karar;
+        document.getElementById('aciklama').value = '';
+
+        if (karar === 'Onaylandi') {
+            modalTitle.textContent = 'Başvuru Onaylama';
+            modalAlert.className = 'alert alert-success';
+            modalAlertText.textContent = `${ogrenciAdi} adlı öğrencinin ${basvuruTuru} başvurusunu onaylamak istediğinizden emin misiniz?`;
+            confirmBtn.className = 'btn btn-success';
+            confirmBtn.textContent = 'Onayla';
+        } else {
+            modalTitle.textContent = 'Başvuru Reddetme';
+            modalAlert.className = 'alert alert-danger';
+            modalAlertText.textContent = `${ogrenciAdi} adlı öğrencinin ${basvuruTuru} başvurusunu reddetmek istediğinizden emin misiniz?`;
+            confirmBtn.className = 'btn btn-danger';
+            confirmBtn.textContent = 'Reddet';
+        }
+
+        new bootstrap.Modal(modal).show();
+    }
+
+    // Form gönderme
+            document.getElementById('approvalForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const basvuruId = document.getElementById('basvuruId').value;
+        const karar = document.getElementById('karar').value;
+        const aciklama = document.getElementById('aciklama').value || '';
+
+        // Validation
+        if (!basvuruId || !karar) {
+            alert('Geçersiz parametreler!');
+            return;
+        }
+
+        if (karar === 'Reddedildi' && !aciklama.trim()) {
+            alert('Red durumunda açıklama zorunludur!');
+            return;
+        }
+
+        const confirmBtn = document.getElementById('confirmBtn');
+        const originalText = confirmBtn.textContent;
+
+        confirmBtn.disabled = true;
+        confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>İşleniyor...';
+
+        // FormData ile düzgün gönderim
+        const formData = new FormData();
+        formData.append('basvuruId', parseInt(basvuruId));
+        formData.append('karar', karar);
+        formData.append('aciklama', aciklama);
+        formData.append('__RequestVerificationToken',
+            document.querySelector('input[name="__RequestVerificationToken"]').value);
+
+        fetch('@Url.Action("OnayVer", "Yetkili")', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => {
+            console.log('Response status:', response.status);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Response data:', data);
+            if (data.success) {
+                alert(data.message);
+                bootstrap.Modal.getInstance(document.getElementById('approvalModal')).hide();
+                location.reload();
+            } else {
+                alert('Hata: ' + data.message);
+                confirmBtn.disabled = false;
+                confirmBtn.textContent = originalText;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Bir hata oluştu: ' + error.message);
+            confirmBtn.disabled = false;
+            confirmBtn.textContent = originalText;
+        });
+    });
+</script>

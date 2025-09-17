@@ -1,0 +1,379 @@
+﻿@model HayataAtilmaFormu.Models.Basvuru
+@{
+    ViewData["Title"] = "Başvuru Takip";
+}
+
+<div class="container-fluid">
+    <!-- Sayfa Başlığı -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="mb-0 text-dark">
+            <i class="fas fa-clipboard-list me-2 text-primary"></i>Başvuru Takip
+        </h3>
+        <a href="@Url.Action("Index", "Ogrenci")" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-1"></i>Ana Sayfa
+        </a>
+    </div>
+
+    @if (Model == null)
+    {
+        <!-- Başvuru Bulunamadı -->
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center py-5">
+                <i class="fas fa-info-circle fa-3x text-muted mb-3"></i>
+                <h4 class="text-dark mb-2">Henüz başvuru yapmamışsınız</h4>
+                <p class="text-muted mb-4">İlişik kesme başvurusu yapmak için ana sayfaya dönebilirsiniz.</p>
+                <a href="@Url.Action("Index", "Ogrenci")" class="btn btn-primary">
+                    <i class="fas fa-home me-2"></i>Ana Sayfa
+                </a>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="row g-4">
+            <!-- Sol Kolon - Ana Bilgiler -->
+            <div class="col-xl-8">
+                <!-- Başvuru Özeti -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white border-0 py-3">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-file-alt text-primary me-2"></i>Başvuru Özeti
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3 mb-4">
+                            <div class="col-lg-3">
+                                <div class="text-center p-3 bg-light rounded">
+                                    <i class="fas fa-tag text-primary mb-2"></i>
+                                    <small class="text-muted d-block">Başvuru Türü</small>
+                                    <span class="fw-medium">@Model.BasvuruTuru</span>
+                                </div>
+                            </div>
+                            <div class="col-lg-3">
+                                <div class="text-center p-3 bg-light rounded">
+                                    <i class="fas fa-calendar text-primary mb-2"></i>
+                                    <small class="text-muted d-block">Başvuru Tarihi</small>
+                                    <span class="fw-medium">@Model.BasvuruTarihi.ToString("dd.MM.yyyy")</span>
+                                </div>
+                            </div>
+                            <div class="col-lg-3">
+                                <div class="text-center p-3 bg-light rounded">
+                                    <i class="fas fa-info-circle text-primary mb-2"></i>
+                                    <small class="text-muted d-block">Durum</small>
+                                    <span class="badge bg-@(Model.Durum == "Onaylandi" ? "success" : Model.Durum == "Reddedildi" ? "danger" : "warning")">
+                                        @Model.Durum
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="col-lg-3">
+                                <div class="text-center p-3 bg-light rounded">
+                                    <i class="fas fa-chart-line text-primary mb-2"></i>
+                                    <small class="text-muted d-block">İlerleme</small>
+                                    <span class="fw-medium">@Model.MevcutAsama / @Model.ToplamAsama</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- İlerleme Çubuğu -->
+                        <div class="mb-4">
+                            @{
+                                var ilerlemePct = (int)Math.Round((double)Model.MevcutAsama / Model.ToplamAsama * 100);
+                            }
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted">İşlem Durumu</span>
+                                <span class="text-primary fw-medium">%@ilerlemePct</span>
+                            </div>
+                            <div class="progress" style="height: 10px;">
+                                <div class="progress-bar bg-primary" style="width: @ilerlemePct%"></div>
+                            </div>
+                        </div>
+
+                        <!-- Açıklama -->
+                        @if (!string.IsNullOrEmpty(Model.Aciklama))
+                        {
+                            <div class="p-3 bg-light rounded">
+                                <h6 class="text-muted mb-2">
+                                    <i class="fas fa-comment-alt me-1"></i>Başvuru Açıklaması
+                                </h6>
+                                <p class="mb-0 text-dark">@Model.Aciklama</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <!-- Onay Aşamaları -->
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-0 py-3">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-list-ol text-primary me-2"></i>Onay Aşamaları
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        @if (Model.OnayDetaylari != null && Model.OnayDetaylari.Any())
+                        {
+                            <div class="timeline-container">
+                                @foreach (var detay in Model.OnayDetaylari.OrderBy(x => x.AsamaNo))
+                                {
+                                    var statusClass = detay.Durum switch
+                                    {
+                                        "Onaylandi" => "completed",
+                                        "Beklemede" => "active",
+                                        "Reddedildi" => "rejected",
+                                        _ => "pending"
+                                    };
+
+                                    <div class="timeline-step @statusClass">
+                                        <div class="timeline-marker">
+                                            @if (detay.Durum == "Onaylandi")
+                                            {
+                                                <i class="fas fa-check"></i>
+                                            }
+                                            else if (detay.Durum == "Beklemede")
+                                            {
+                                                <i class="fas fa-clock"></i>
+                                            }
+                                            else if (detay.Durum == "Reddedildi")
+                                            {
+                                                <i class="fas fa-times"></i>
+                                            }
+                                            else
+                                            {
+                                                <span>@detay.AsamaNo</span>
+                                            }
+                                        </div>
+                                        <div class="timeline-content">
+                                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                                <h6 class="mb-0 fw-medium">@detay.AsamaAdi</h6>
+                                                <span class="badge bg-@(detay.Durum == "Onaylandi" ? "success" : detay.Durum == "Beklemede" ? "warning" : detay.Durum == "Reddedildi" ? "danger" : "secondary")">
+                                                    @detay.Durum
+                                                </span>
+                                            </div>
+                                            <div class="text-muted small mb-2">
+                                                <i class="fas fa-user me-1"></i>
+                                                @if (detay.Yetkili != null)
+                                                {
+                                                    <span>@detay.Yetkili.AdSoyad</span>
+                                                }
+                                                else
+                                                {
+                                                    <span>Henüz atanmadı</span>
+                                                }
+
+                                                @if (detay.OnayTarihi.HasValue)
+                                                {
+                                                    <span class="ms-3">
+                                                        <i class="fas fa-calendar me-1"></i>
+                                                        @detay.OnayTarihi.Value.ToString("dd.MM.yyyy HH:mm")
+                                                    </span>
+                                                }
+                                            </div>
+                                            @if (!string.IsNullOrEmpty(detay.Aciklama))
+                                            {
+                                                <div class="mt-2 p-2 bg-light rounded small">
+                                                    <i class="fas fa-comment text-primary me-1"></i>
+                                                    @detay.Aciklama
+                                                </div>
+                                            }
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="text-center text-muted py-4">
+                                <i class="fas fa-hourglass-half fa-2x mb-2"></i>
+                                <p class="mb-0">Onay aşamaları yükleniyor...</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sağ Kolon - Durum ve İşlemler -->
+            <div class="col-xl-4">
+                <!-- Red Nedeni -->
+                @if (Model.Durum == "Reddedildi" && !string.IsNullOrEmpty(Model.RedNedeni))
+                {
+                    <div class="card border-0 shadow-sm mb-4">
+                        <div class="card-header bg-danger text-white border-0 py-3">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-exclamation-triangle me-2"></i>Red Nedeni
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="mb-0">@Model.RedNedeni</p>
+                        </div>
+                    </div>
+                }
+
+                <!-- Onaylı Başvuru -->
+                @if (Model.Durum == "Onaylandi" && Model.TamamlanmaTarihi.HasValue)
+                {
+                    <div class="card border-0 shadow-sm mb-4">
+                        <div class="card-header bg-success text-white border-0 py-3">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-check-circle me-2"></i>Başvuru Onaylandı
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="mb-3">
+                                <i class="fas fa-calendar-check text-success me-2"></i>
+                                <strong>Tamamlanma:</strong><br>
+                                @Model.TamamlanmaTarihi.Value.ToString("dd.MM.yyyy HH:mm")
+                            </p>
+                            <a href="@Url.Action("PdfIndir", "Ogrenci")" class="btn btn-success w-100">
+                                <i class="fas fa-download me-2"></i>PDF İndir
+                            </a>
+                        </div>
+                    </div>
+                }
+
+                <!-- Hızlı İşlemler -->
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-0 py-3">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-bolt text-primary me-2"></i>İşlemler
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <button type="button" class="btn btn-outline-primary" onclick="window.print()">
+                                <i class="fas fa-print me-2"></i>Yazdır
+                            </button>
+
+                            @if (Model.Durum == "Onaylandi" || Model.Durum == "Tamamlandi")
+                            {
+                                <a href="@Url.Action("PdfIndir", "Ogrenci")" class="btn btn-success">
+                                    <i class="fas fa-download me-2"></i>PDF İndir
+                                </a>
+                            }
+
+                            <a href="@Url.Action("Index", "Ogrenci")" class="btn btn-outline-secondary">
+                                <i class="fas fa-home me-2"></i>Ana Sayfa
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<style>
+    .timeline-container {
+        position: relative;
+        padding-left: 0;
+    }
+
+    .timeline-step {
+        position: relative;
+        padding: 0 0 30px 50px;
+        margin-bottom: 0;
+    }
+
+        .timeline-step:before {
+            content: '';
+            position: absolute;
+            left: 20px;
+            top: 35px;
+            bottom: -30px;
+            width: 2px;
+            background: #dee2e6;
+        }
+
+        .timeline-step:last-child:before {
+            display: none;
+        }
+
+    .timeline-marker {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 40px;
+        height: 40px;
+        background: #f8f9fa;
+        border: 2px solid #dee2e6;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        font-weight: bold;
+    }
+
+    .timeline-step.completed .timeline-marker {
+        background: #28a745;
+        border-color: #28a745;
+        color: white;
+    }
+
+    .timeline-step.active .timeline-marker {
+        background: #ffc107;
+        border-color: #ffc107;
+        color: white;
+    }
+
+    .timeline-step.rejected .timeline-marker {
+        background: #dc3545;
+        border-color: #dc3545;
+        color: white;
+    }
+
+    .timeline-content {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        border: 1px solid #dee2e6;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .timeline-step.active .timeline-content {
+        border-color: #ffc107;
+        background: #fffbf0;
+    }
+
+    .timeline-step.completed .timeline-content {
+        border-color: #28a745;
+        background: #f0fff4;
+    }
+
+    .timeline-step.rejected .timeline-content {
+        border-color: #dc3545;
+        background: #fff5f5;
+    }
+
+    .card {
+        border-radius: 12px;
+    }
+
+    .card-header {
+        border-radius: 12px 12px 0 0 !important;
+    }
+
+    .btn {
+        border-radius: 8px;
+        font-weight: 500;
+    }
+
+    .progress {
+        border-radius: 10px;
+    }
+
+    .progress-bar {
+        border-radius: 10px;
+    }
+
+    .bg-light {
+        border-radius: 8px !important;
+    }
+
+    .alert {
+        border-radius: 10px;
+        border: none;
+    }
+
+    .badge {
+        font-weight: 500;
+    }
+</style>

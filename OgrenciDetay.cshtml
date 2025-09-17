@@ -1,0 +1,375 @@
+﻿@model HayataAtilmaFormu.Models.Ogrenci
+
+@{
+    ViewData["Title"] = "Öğrenci Detayı";
+}
+<div class="fixed-admin-nav">
+    <a href="@Url.Action("Index", "Admin")" class="btn btn-primary btn-sm"
+       style="position: fixed; top: 80px; right: 20px; z-index: 1050; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+        <i class="fas fa-home"></i> Admin
+    </a>
+</div>
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">@Model.TamAd - Öğrenci Detayı</h1>
+            <small class="text-muted">Öğrenci No: @Model.OgrenciNo</small>
+        </div>
+        <div>
+            <a href="@Url.Action("Ogrenciler")" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Geri
+            </a>
+        </div>
+    </div>
+
+    @if (ViewBag.Error != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @ViewBag.Error
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="row">
+        <!-- Sol Kolon - Öğrenci Bilgileri -->
+        <div class="col-lg-8">
+            <!-- Temel Bilgiler -->
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-user"></i> Temel Bilgiler
+                    </h5>
+                    <span class="badge @(Model.Aktif ? "bg-success" : "bg-danger")">
+                        @(Model.Aktif ? "Aktif" : "Pasif")
+                    </span>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <dl class="row">
+                                <dt class="col-sm-4">Ad:</dt>
+                                <dd class="col-sm-8">@Model.Ad</dd>
+                                <dt class="col-sm-4">Soyad:</dt>
+                                <dd class="col-sm-8">@Model.Soyad</dd>
+                                <dt class="col-sm-4">Öğrenci No:</dt>
+                                <dd class="col-sm-8">@Model.OgrenciNo</dd>
+                                <dt class="col-sm-4">E-posta:</dt>
+                                <dd class="col-sm-8">
+                                    <a href="mailto:@Model.Email">@Model.Email</a>
+                                </dd>
+                            </dl>
+                        </div>
+                        <div class="col-md-6">
+                            <dl class="row">
+                                <dt class="col-sm-4">Fakülte:</dt>
+                                <dd class="col-sm-8">@Model.Fakulte?.FakulteAdi</dd>
+                                <dt class="col-sm-4">Bölüm:</dt>
+                                <dd class="col-sm-8">@Model.Bolum?.BolumAdi</dd>
+                                <dt class="col-sm-4">Kayıt Tarihi:</dt>
+                                <dd class="col-sm-8">@Model.KayitTarihi.ToString("dd/MM/yyyy HH:mm")</dd>
+                                <dt class="col-sm-4">Durum:</dt>
+                                <dd class="col-sm-8">
+                                    <span class="badge @(Model.Aktif ? "bg-success" : "bg-danger")">
+                                        @(Model.Aktif ? "Aktif" : "Pasif")
+                                    </span>
+                                </dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Başvuru Geçmişi -->
+            @if (Model.Basvurular != null && Model.Basvurular.Any())
+            {
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-file-alt"></i> Başvuru Geçmişi
+                            <span class="badge bg-primary">@Model.Basvurular.Count</span>
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        @foreach (var basvuru in Model.Basvurular.OrderByDescending(b => b.BasvuruTarihi))
+                        {
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <h6 class="card-title mb-0">
+                                            @basvuru.BasvuruTuru
+                                            <span class="badge @GetDurumBadgeClass(basvuru.Durum) ms-2">
+                                                @basvuru.Durum
+                                            </span>
+                                        </h6>
+                                        <small class="text-muted">
+                                            @basvuru.BasvuruTarihi.ToString("dd/MM/yyyy HH:mm")
+                                        </small>
+                                    </div>
+                                    <p class="card-text text-muted">@basvuru.Aciklama</p>
+
+                                    @if (basvuru.OnayDetaylari != null && basvuru.OnayDetaylari.Any())
+                                    {
+                                        <div class="mt-3">
+                                            <h6>Onay Aşamaları:</h6>
+                                            <div class="table-responsive">
+                                                <table class="table table-sm">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Aşama</th>
+                                                            <th>Yetkili</th>
+                                                            <th>Durum</th>
+                                                            <th>Tarih</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        @foreach (var detay in basvuru.OnayDetaylari.OrderBy(od => od.AsamaNo))
+                                                        {
+                                                            <tr>
+                                                                <td>@detay.AsamaNo. @detay.AsamaAdi</td>
+                                                                <td>@detay.YetkiliAdi</td>
+                                                                <td>
+                                                                    <span class="badge @GetDurumBadgeClass(detay.Durum)">
+                                                                        @detay.Durum
+                                                                    </span>
+                                                                </td>
+                                                                <td>@(detay.OnayTarihi?.ToString("dd/MM/yyyy") ?? "-")</td>
+                                                            </tr>
+                                                        }
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="card">
+                    <div class="card-body text-center text-muted">
+                        <i class="fas fa-file-o fa-3x mb-3"></i>
+                        <p>Bu öğrencinin henüz başvurusu bulunmamaktadır.</p>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Sağ Kolon - İşlemler -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-cogs"></i> İşlemler
+                    </h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.Aktif)
+                    {
+                        <!-- Aktif öğrenci için işlemler -->
+                        <button class="btn btn-warning btn-sm w-100 mb-2"
+                                onclick="ogrenciPasifYap(@Model.Id, '@Model.TamAd')">
+                            <i class="fas fa-pause"></i> Öğrenciyi Pasif Yap
+                        </button>
+
+                        <button class="btn btn-danger btn-sm w-100 mb-2"
+                                onclick="ogrenciSil(@Model.Id, '@Model.TamAd', false)">
+                            <i class="fas fa-trash"></i> Soft Delete
+                        </button>
+
+                        @if (Model.Basvurular == null || !Model.Basvurular.Any())
+                        {
+                            <button class="btn btn-danger btn-sm w-100 mb-2"
+                                    onclick="ogrenciSil(@Model.Id, '@Model.TamAd', true)">
+                                <i class="fas fa-trash-alt"></i> Kalıcı Sil
+                            </button>
+                        }
+                        else
+                        {
+                            <div class="alert alert-warning p-2 small">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                Başvuruları olduğu için kalıcı silinemez.
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <!-- Pasif öğrenci için işlemler -->
+                        <button class="btn btn-success btn-sm w-100 mb-2"
+                                onclick="ogrenciGeriYukle(@Model.Id, '@Model.TamAd')">
+                            <i class="fas fa-undo"></i> Öğrenciyi Geri Yükle
+                        </button>
+
+                        @if (Model.Basvurular == null || !Model.Basvurular.Any())
+                        {
+                            <button class="btn btn-danger btn-sm w-100 mb-2"
+                                    onclick="ogrenciSil(@Model.Id, '@Model.TamAd', true)">
+                                <i class="fas fa-trash-alt"></i> Kalıcı Sil
+                            </button>
+                        }
+                    }
+
+                    <hr>
+
+                    <!-- İstatistikler -->
+                    <div class="small">
+                        <div class="d-flex justify-content-between">
+                            <span>Toplam Başvuru:</span>
+                            <span class="fw-bold">@(Model.Basvurular?.Count ?? 0)</span>
+                        </div>
+                        @if (Model.Basvurular != null && Model.Basvurular.Any())
+                        {
+                            <div class="d-flex justify-content-between">
+                                <span>Onaylanan:</span>
+                                <span class="text-success fw-bold">
+                                    @Model.Basvurular.Count(b => b.Durum == ApplicationConstants.Onaylandi)
+                                </span>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span>Reddedilen:</span>
+                                <span class="text-danger fw-bold">
+                                    @Model.Basvurular.Count(b => b.Durum == ApplicationConstants.Reddedildi)
+                                </span>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span>Beklemede:</span>
+                                <span class="text-warning fw-bold">
+                                    @Model.Basvurular.Count(b => b.Durum == ApplicationConstants.Beklemede)
+                                </span>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Profil Bilgileri -->
+            @if (Model.UserProfile != null)
+            {
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-user-circle"></i> Profil Durumu
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span>Profil Tamamlanma:</span>
+                            <span class="badge @(Model.UserProfile.ProfilTamamlandi ? "bg-success" : "bg-warning")">
+                                @(Model.UserProfile.ProfilTamamlandi ? "Tamamlandı" : "Eksik")
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function ogrenciPasifYap(id, isim) {
+            if (confirm(`${isim} isimli öğrenci pasif yapılacak. Emin misiniz?`)) {
+                $.post('@Url.Action("OgrenciSil", "Admin")', {
+                    id: id,
+                    hardDelete: false,
+                    __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                })
+                .done(function(result) {
+                    if (result.success) {
+                        showAlert(result.message, 'success');
+                        setTimeout(() => location.reload(), 1500);
+                    } else {
+                        showAlert(result.message, 'danger');
+                    }
+                })
+                .fail(function() {
+                    showAlert('İşlem sırasında hata oluştu.', 'danger');
+                });
+            }
+        }
+
+        function ogrenciSil(id, isim, hardDelete) {
+            const mesaj = hardDelete
+                ? `${isim} isimli öğrenci kalıcı olarak silinecek. Bu işlem geri alınamaz!`
+                : `${isim} isimli öğrenci pasif yapılacak. Geri yüklenebilir.`;
+
+            if (confirm(mesaj)) {
+                $.post('@Url.Action("OgrenciSil", "Admin")', {
+                    id: id,
+                    hardDelete: hardDelete,
+                    __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                })
+                .done(function(result) {
+                    if (result.success) {
+                        showAlert(result.message, 'success');
+                        if (hardDelete) {
+                            setTimeout(() => window.location.href = '@Url.Action("Ogrenciler", "Admin")', 1500);
+                        } else {
+                            setTimeout(() => location.reload(), 1500);
+                        }
+                    } else {
+                        showAlert(result.message, 'danger');
+                    }
+                })
+                .fail(function() {
+                    showAlert('İşlem sırasında hata oluştu.', 'danger');
+                });
+            }
+        }
+
+        function ogrenciGeriYukle(id, isim) {
+            if (confirm(`${isim} isimli öğrenci geri yüklenecek. Emin misiniz?`)) {
+                $.post('@Url.Action("OgrenciGeriYukle", "Admin")', {
+                    id: id,
+                    __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                })
+                .done(function(result) {
+                    if (result.success) {
+                        showAlert(result.message, 'success');
+                        setTimeout(() => location.reload(), 1500);
+                    } else {
+                        showAlert(result.message, 'danger');
+                    }
+                })
+                .fail(function() {
+                    showAlert('İşlem sırasında hata oluştu.', 'danger');
+                });
+            }
+        }
+
+        function showAlert(message, type) {
+            const alertDiv = $(`
+                <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `);
+
+            $('.container-fluid').prepend(alertDiv);
+
+            setTimeout(() => {
+                alertDiv.fadeOut();
+            }, 5000);
+        }
+    </script>
+}
+
+@{
+    string GetDurumBadgeClass(string durum)
+    {
+        return durum switch
+        {
+            ApplicationConstants.Onaylandi => "bg-success",
+            ApplicationConstants.Reddedildi => "bg-danger",
+            ApplicationConstants.Beklemede => "bg-warning",
+            ApplicationConstants.Iptal => "bg-secondary",
+            _ => "bg-light text-dark"
+        };
+    }
+}
+
+<!-- CSRF Token -->
+@Html.AntiForgeryToken()

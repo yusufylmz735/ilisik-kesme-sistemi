@@ -1,0 +1,782 @@
+﻿@model HayataAtilmaFormu.Models.ViewModels.ProfileViewModel
+@{
+    ViewData["Title"] = "Profil Düzenle";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="page-title">
+                <i class="fas fa-user-edit me-2"></i>Profil Düzenle
+            </h2>
+            <a href="@Url.Action("Index", "Profile")" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Profile Dön
+            </a>
+        </div>
+
+        @if (!string.IsNullOrEmpty(ViewBag.Error))
+        {
+            <div class="alert alert-danger">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                @ViewBag.Error
+            </div>
+        }
+
+        @if (!string.IsNullOrEmpty(ViewBag.Success))
+        {
+            <div class="alert alert-success">
+                <i class="fas fa-check-circle me-2"></i>
+                @ViewBag.Success
+            </div>
+        }
+
+        <form method="post" enctype="multipart/form-data" id="profileForm">
+            @Html.AntiForgeryToken()
+
+            <div class="row">
+                <!-- Sol Kolon - Profil Fotoğrafı ve Durum -->
+                <div class="col-md-4">
+                    <!-- Profil Fotoğrafı -->
+                    <div class="card mb-4">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-camera me-2"></i>
+                                Profil Fotoğrafı
+                            </h5>
+                        </div>
+                        <div class="card-body text-center">
+                            <div class="mb-3">
+                                <div id="profilePreview" class="mb-3">
+                                    @if (!string.IsNullOrEmpty(Model.ProfilFotoYolu))
+                                    {
+                                        <img src="@Model.ProfilFotoYolu"
+                                             alt="Mevcut Profil Fotoğrafı"
+                                             class="rounded-circle img-fluid"
+                                             style="width: 150px; height: 150px; object-fit: cover;">
+                                    }
+                                    else
+                                    {
+                                        <div class="rounded-circle bg-light border d-inline-flex align-items-center justify-content-center"
+                                             style="width: 150px; height: 150px;">
+                                            <i class="fas fa-user fa-3x text-muted"></i>
+                                        </div>
+                                    }
+                                </div>
+
+                                <div class="input-group">
+                                    <input type="file"
+                                           class="form-control"
+                                           id="profilePhoto"
+                                           name="profilePhoto"
+                                           accept=".jpg,.jpeg,.png,.gif">
+                                    <button class="btn btn-outline-danger"
+                                            type="button"
+                                            id="removePhoto"
+                                            title="Fotoğrafı Kaldır">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                                <div class="form-text">
+                                    Desteklenen formatlar: JPG, PNG, GIF (Max: 5MB)
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Profil Tamamlanma -->
+                    <div class="card">
+                        <div class="card-header bg-info text-white">
+                            <h6 class="card-title mb-0">
+                                <i class="fas fa-chart-pie me-2"></i>
+                                Profil Durumu
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div id="profileCompleteness">
+                                <div class="progress mb-2" style="height: 10px;">
+                                    <div id="progressBar" class="progress-bar bg-success" role="progressbar" style="width: 50%"></div>
+                                </div>
+                                <small id="progressText" class="text-muted">Profil tamamlanma oranı hesaplanıyor...</small>
+                            </div>
+
+                            <hr class="my-3">
+
+                            <div class="small">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span>Temel Bilgiler:</span>
+                                    <i class="fas fa-check text-success"></i>
+                                </div>
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span>Profil Fotoğrafı:</span>
+                                    <i id="photoStatus" class="fas fa-times text-danger"></i>
+                                </div>
+                                @if (Model.UserType == "Yetkili")
+                                {
+                                    <div class="d-flex justify-content-between mb-1">
+                                        <span>Hakkımda:</span>
+                                        <i id="aboutStatus" class="fas fa-times text-danger"></i>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-1">
+                                        <span>İletişim Bilgileri:</span>
+                                        <i id="contactStatus" class="fas fa-times text-danger"></i>
+                                    </div>
+                                    <div class="d-flex justify-content-between">
+                                        <span>Kişisel Bilgiler:</span>
+                                        <i id="personalStatus" class="fas fa-times text-danger"></i>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="d-flex justify-content-between">
+                                        <span>İletişim:</span>
+                                        <i id="contactStatus" class="fas fa-times text-danger"></i>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sağ Kolon - Form Alanları -->
+                <div class="col-md-8">
+                    @if (Model.UserType == "Ogrenci")
+                    {
+                        <!-- ÖĞRENCİ PROFİLİ -->
+                        <!-- Temel Bilgiler -->
+                        <div class="card mb-4">
+                            <div class="card-header bg-primary text-white">
+                                <h5 class="card-title mb-0">
+                                    <i class="fas fa-user me-2"></i>
+                                    Öğrenci Bilgileri
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="AdSoyad" class="form-label fw-bold">Ad Soyad</label>
+                                            <input type="text"
+                                                   class="form-control"
+                                                   id="AdSoyad"
+                                                   value="@Model.AdSoyad"
+                                                   readonly>
+                                            <div class="form-text">Ad soyad değiştirilemez</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="OgrenciNo" class="form-label fw-bold">Öğrenci No</label>
+                                            <input type="text"
+                                                   class="form-control"
+                                                   id="OgrenciNo"
+                                                   value="@Model.OgrenciNo"
+                                                   readonly>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label fw-bold">Fakülte</label>
+                                            <input type="text"
+                                                   class="form-control"
+                                                   value="@Model.FakulteAdi"
+                                                   readonly>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label fw-bold">Bölüm</label>
+                                            <input type="text"
+                                                   class="form-control"
+                                                   value="@Model.BolumAdi"
+                                                   readonly>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="Email" class="form-label fw-bold">E-posta</label>
+                                            <input type="email"
+                                                   class="form-control"
+                                                   id="Email"
+                                                   value="@Model.Email"
+                                                   readonly>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="Telefon" class="form-label fw-bold">
+                                                <i class="fas fa-phone me-1"></i>Telefon
+                                            </label>
+                                            <input type="tel"
+                                                   class="form-control"
+                                                   id="Telefon"
+                                                   name="Telefon"
+                                                   value="@Model.Telefon"
+                                                   placeholder="05XX XXX XX XX">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Aile Bilgileri -->
+                        <div class="card mb-4">
+                            <div class="card-header bg-success text-white">
+                                <h5 class="card-title mb-0">
+                                    <i class="fas fa-home me-2"></i>
+                                    Aile Bilgileri
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="AnneAdi" class="form-label fw-bold">Anne Adı</label>
+                                            <input type="text"
+                                                   class="form-control"
+                                                   id="AnneAdi"
+                                                   name="AnneAdi"
+                                                   value="@Model.AnneAdi"
+                                                   placeholder="Anne adınız">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="BabaAdi" class="form-label fw-bold">Baba Adı</label>
+                                            <input type="text"
+                                                   class="form-control"
+                                                   id="BabaAdi"
+                                                   name="BabaAdi"
+                                                   value="@Model.BabaAdi"
+                                                   placeholder="Baba adınız">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="Adres" class="form-label fw-bold">
+                                        <i class="fas fa-map-marker-alt me-1"></i>Adres
+                                    </label>
+                                    <textarea class="form-control"
+                                          id="Adres"
+                                          name="Adres"
+                                          rows="2"
+                                          placeholder="Tam adresinizi yazın...">@Model.Adres</textarea>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <!-- YETKİLİ PROFİLİ -->
+                        <!-- Temel Bilgiler -->
+                        <div class="card mb-4">
+                            <div class="card-header bg-primary text-white">
+                                <h5 class="card-title mb-0">
+                                    <i class="fas fa-user me-2"></i>
+                                    Temel Bilgiler
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="AdSoyad" class="form-label fw-bold">Ad Soyad</label>
+                                            <input type="text"
+                                                   class="form-control"
+                                                   id="AdSoyad"
+                                                   value="@Model.AdSoyad"
+                                                   readonly>
+                                            <div class="form-text">Ad soyad değiştirilemez</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="Email" class="form-label fw-bold">E-posta</label>
+                                            <input type="email"
+                                                   class="form-control"
+                                                   id="Email"
+                                                   value="@Model.Email"
+                                                   readonly>
+                                            <div class="form-text">E-posta adresi değiştirilemez</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="Telefon" class="form-label fw-bold">
+                                                <i class="fas fa-phone me-1"></i>Telefon
+                                            </label>
+                                            <input type="tel"
+                                                   class="form-control"
+                                                   id="Telefon"
+                                                   name="Telefon"
+                                                   value="@Model.Telefon"
+                                                   placeholder="05XX XXX XX XX">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="Unvan" class="form-label fw-bold">Unvan</label>
+                                            <input type="text"
+                                                   class="form-control"
+                                                   id="Unvan"
+                                                   name="Unvan"
+                                                   value="@Model.Unvan"
+                                                   placeholder="Ör: İnsan Kaynakları Uzmanı">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="Aciklama" class="form-label fw-bold">Pozisyon Açıklaması</label>
+                                    <textarea class="form-control"
+                                          id="Aciklama"
+                                          name="Aciklama"
+                                          rows="2"
+                                          placeholder="Pozisyon ve sorumluluklarınızı açıklayın...">@Model.Aciklama</textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Hakkımda -->
+                        <div class="card mb-4">
+                            <div class="card-header bg-info text-white">
+                                <h5 class="card-title mb-0">
+                                    <i class="fas fa-user-circle me-2"></i>
+                                    Hakkımda
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label for="Hakkinda" class="form-label fw-bold">Kendinizi Tanıtın</label>
+                                    <textarea class="form-control"
+                                          id="Hakkinda"
+                                          name="Hakkinda"
+                                          rows="4"
+                                          placeholder="Kendinizi, iş deneyimlerinizi ve uzmanlık alanlarınızı kısaca anlatın..."
+                                          maxlength="1000">@Model.Hakkinda</textarea>
+                                    <div class="form-text">
+                                        <span id="charCount">0</span>/1000 karakter
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sosyal Medya ve Web -->
+                        <div class="card mb-4">
+                            <div class="card-header bg-success text-white">
+                                <h5 class="card-title mb-0">
+                                    <i class="fas fa-globe me-2"></i>
+                                    İletişim ve Sosyal Medya
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label for="Website" class="form-label fw-bold">
+                                                <i class="fas fa-globe me-1"></i>Website
+                                            </label>
+                                            <input type="url"
+                                                   class="form-control"
+                                                   id="Website"
+                                                   name="Website"
+                                                   value="@Model.Website"
+                                                   placeholder="https://example.com">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label for="LinkedIn" class="form-label fw-bold">
+                                                <i class="fab fa-linkedin me-1"></i>LinkedIn
+                                            </label>
+                                            <input type="url"
+                                                   class="form-control"
+                                                   id="LinkedIn"
+                                                   name="LinkedIn"
+                                                   value="@Model.LinkedIn"
+                                                   placeholder="https://linkedin.com/in/...">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label for="Twitter" class="form-label fw-bold">
+                                                <i class="fab fa-twitter me-1"></i>Twitter
+                                            </label>
+                                            <input type="url"
+                                                   class="form-control"
+                                                   id="Twitter"
+                                                   name="Twitter"
+                                                   value="@Model.Twitter"
+                                                   placeholder="https://twitter.com/...">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Kişisel Bilgiler -->
+                        <div class="card mb-4">
+                            <div class="card-header bg-warning text-dark">
+                                <h5 class="card-title mb-0">
+                                    <i class="fas fa-id-card me-2"></i>
+                                    Kişisel Bilgiler
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="DogumTarihi" class="form-label fw-bold">
+                                                <i class="fas fa-birthday-cake me-1"></i>Doğum Tarihi
+                                            </label>
+                                            <input type="date"
+                                                   class="form-control"
+                                                   id="DogumTarihi"
+                                                   name="DogumTarihi"
+                                                   value="@(Model.DogumTarihi?.ToString("yyyy-MM-dd") ?? "")">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="Cinsiyet" class="form-label fw-bold">
+                                                <i class="fas fa-venus-mars me-1"></i>Cinsiyet
+                                            </label>
+                                            <select class="form-select" id="Cinsiyet" name="Cinsiyet">
+                                                <option value="">Seçiniz...</option>
+                                                <option value="Erkek" selected="@(Model.Cinsiyet == "Erkek")">Erkek</option>
+                                                <option value="Kadın" selected="@(Model.Cinsiyet == "Kadın")">Kadın</option>
+                                                <option value="Belirtmek İstemiyorum" selected="@(Model.Cinsiyet == "Belirtmek İstemiyorum")">Belirtmek İstemiyorum</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="Adres" class="form-label fw-bold">
+                                        <i class="fas fa-map-marker-alt me-1"></i>Adres
+                                    </label>
+                                    <textarea class="form-control"
+                                          id="Adres"
+                                          name="Adres"
+                                          rows="2"
+                                          placeholder="Tam adresinizi yazın...">@Model.Adres</textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Eğitim Bilgileri -->
+                        <div class="card mb-4">
+                            <div class="card-header bg-secondary text-white">
+                                <h5 class="card-title mb-0">
+                                    <i class="fas fa-graduation-cap me-2"></i>
+                                    Eğitim Bilgileri
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="Universite" class="form-label fw-bold">Üniversite</label>
+                                            <input type="text"
+                                                   class="form-control"
+                                                   id="Universite"
+                                                   name="Universite"
+                                                   value="@Model.Universite"
+                                                   placeholder="Mezun olduğunuz üniversite">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="Mezuniyet" class="form-label fw-bold">Mezuniyet Yılı</label>
+                                            <input type="text"
+                                                   class="form-control"
+                                                   id="Mezuniyet"
+                                                   name="Mezuniyet"
+                                                   value="@Model.Mezuniyet"
+                                                   placeholder="2023">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    <!-- Form Butonları -->
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="text-muted small">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    Son güncelleme: @Model.GuncellenmeTarihi.ToString("dd.MM.yyyy HH:mm")
+                                </div>
+                                <div>
+                                    <a href="@Url.Action("Index", "Profile")" class="btn btn-outline-secondary me-2">
+                                        <i class="fas fa-times me-1"></i>İptal
+                                    </a>
+                                    <button type="submit" class="btn btn-primary btn-lg" id="saveButton">
+                                        <i class="fas fa-save me-2"></i>Kaydet
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const isYetkili = '@Model.UserType' === 'Yetkili';
+
+            // Form elemanları
+            const profilePhotoInput = document.getElementById('profilePhoto');
+            const removePhotoBtn = document.getElementById('removePhoto');
+            const profilePreview = document.getElementById('profilePreview');
+            const saveButton = document.getElementById('saveButton');
+            const form = document.getElementById('profileForm');
+
+            // Yetkili için özel elemanlar
+            const hakkindaTextarea = isYetkili ? document.getElementById('Hakkinda') : null;
+            const charCount = isYetkili ? document.getElementById('charCount') : null;
+
+            // Profil fotoğrafı preview
+            profilePhotoInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    if (file.size > 5 * 1024 * 1024) {
+                        alert('Dosya boyutu 5MB\'den büyük olamaz.');
+                        this.value = '';
+                        return;
+                    }
+
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        profilePreview.innerHTML = `
+                            <img src="${e.target.result}"
+                                 alt="Yeni Profil Fotoğrafı"
+                                 class="rounded-circle img-fluid"
+                                 style="width: 150px; height: 150px; object-fit: cover;">
+                        `;
+                        updateProfileCompleteness();
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            // Fotoğraf kaldır
+            removePhotoBtn.addEventListener('click', function() {
+                profilePhotoInput.value = '';
+                profilePreview.innerHTML = `
+                    <div class="rounded-circle bg-light border d-inline-flex align-items-center justify-content-center"
+                         style="width: 150px; height: 150px;">
+                        <i class="fas fa-user fa-3x text-muted"></i>
+                    </div>
+                `;
+                updateProfileCompleteness();
+            });
+
+            // Karakter sayacı (sadece yetkili için)
+            if (isYetkili && hakkindaTextarea && charCount) {
+                function updateCharCount() {
+                    const count = hakkindaTextarea.value.length;
+                    charCount.textContent = count;
+                    charCount.className = count > 900 ? 'text-danger' : count > 700 ? 'text-warning' : 'text-success';
+                }
+                hakkindaTextarea.addEventListener('input', updateCharCount);
+                updateCharCount();
+            }
+
+            // Profil tamamlanma hesaplama
+            function updateProfileCompleteness() {
+                let completeness = 50; // Temel bilgiler için
+                let completedSections = 1;
+
+                // Profil fotoğrafı kontrolü
+                const hasPhoto = profilePhotoInput.files.length > 0 ||
+                                profilePreview.querySelector('img[alt*="Mevcut"]');
+                if (hasPhoto) {
+                    completeness += isYetkili ? 15 : 25;
+                    completedSections++;
+                    document.getElementById('photoStatus').className = 'fas fa-check text-success';
+                } else {
+                    document.getElementById('photoStatus').className = 'fas fa-times text-danger';
+                }
+
+                if (isYetkili) {
+                    // Yetkili için detaylı kontroller
+                    // Hakkımda kontrolü
+                    if (hakkindaTextarea && hakkindaTextarea.value.trim().length > 0) {
+                        completeness += 15;
+                        completedSections++;
+                        document.getElementById('aboutStatus').className = 'fas fa-check text-success';
+                    } else {
+                        document.getElementById('aboutStatus').className = 'fas fa-times text-danger';
+                    }
+
+                    // İletişim bilgileri kontrolü
+                    const hasContact = document.getElementById('Telefon').value.trim() ||
+                                     document.getElementById('Website').value.trim() ||
+                                     document.getElementById('LinkedIn').value.trim() ||
+                                     document.getElementById('Twitter').value.trim();
+                    if (hasContact) {
+                        completeness += 10;
+                        completedSections++;
+                        document.getElementById('contactStatus').className = 'fas fa-check text-success';
+                    } else {
+                        document.getElementById('contactStatus').className = 'fas fa-times text-danger';
+                    }
+                }
+
+                // Progress bar güncelle
+                completeness = Math.min(completeness, 100);
+                const progressBar = document.getElementById('progressBar');
+                const progressText = document.getElementById('progressText');
+
+                progressBar.style.width = completeness + '%';
+                const totalSections = isYetkili ? 5 : 3;
+                progressText.textContent = `${completeness}% tamamlandı (${completedSections}/${totalSections} bölüm)`;
+
+                if (completeness < 50) {
+                    progressBar.className = 'progress-bar bg-danger';
+                } else if (completeness < 80) {
+                    progressBar.className = 'progress-bar bg-warning';
+                } else {
+                    progressBar.className = 'progress-bar bg-success';
+                }
+            }
+
+            // Form elemanları değişiklik dinleyicileri
+            let watchedFields = ['Telefon'];
+
+            if (isYetkili) {
+                watchedFields = watchedFields.concat(['Hakkinda', 'Website', 'LinkedIn', 'Twitter',
+                                                    'DogumTarihi', 'Cinsiyet', 'Adres']);
+            } else {
+                watchedFields = watchedFields.concat(['Adres', 'AnneAdi', 'BabaAdi']);
+            }
+
+            watchedFields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (field) {
+                    field.addEventListener('input', updateProfileCompleteness);
+                    field.addEventListener('change', updateProfileCompleteness);
+                }
+            });
+
+            // Telefon formatı
+            document.getElementById('Telefon').addEventListener('input', function(e) {
+                let value = e.target.value.replace(/\D/g, '');
+                if (value.length > 11) value = value.substring(0, 11);
+
+                if (value.length >= 10) {
+                    value = value.replace(/^(\d{4})(\d{3})(\d{2})(\d{2})$/, '$1 $2 $3 $4');
+                }
+
+                e.target.value = value;
+            });
+
+            // Form submit
+            form.addEventListener('submit', function(e) {
+                const submitBtn = document.getElementById('saveButton');
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Kaydediliyor...';
+                submitBtn.disabled = true;
+            });
+
+            // URL validasyonu (sadece yetkili için)
+            if (isYetkili) {
+                ['Website', 'LinkedIn', 'Twitter'].forEach(fieldId => {
+                    const field = document.getElementById(fieldId);
+                    if (field) {
+                        field.addEventListener('blur', function() {
+                            const value = this.value.trim();
+                            if (value && !value.match(/^https?:\/\//)) {
+                                this.value = 'https://' + value;
+                            }
+                        });
+                    }
+                });
+            }
+
+            // Sayfa yüklendiğinde hesapla
+            updateProfileCompleteness();
+        });
+    </script>
+}
+
+<style>
+    .form-control:focus,
+    .form-select:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+    }
+
+    .progress {
+        border-radius: 10px;
+    }
+
+    .progress-bar {
+        border-radius: 10px;
+        transition: width 0.6s ease;
+    }
+
+    .card-header {
+        border-bottom: 2px solid rgba(0,0,0,.125);
+    }
+
+    .info-status {
+        font-size: 0.9rem;
+    }
+
+    #profilePreview img {
+        transition: transform 0.3s ease;
+    }
+
+        #profilePreview img:hover {
+            transform: scale(1.05);
+        }
+
+    .input-group .btn {
+        border-color: #ced4da;
+    }
+
+    textarea {
+        resize: vertical;
+        min-height: 60px;
+    }
+
+    .form-text {
+        font-size: 0.875rem;
+    }
+
+    /* Öğrenci profili için daha basit görünüm */
+    .student-profile .card-header {
+        background: linear-gradient(135deg, #007bff, #0056b3) !important;
+    }
+
+    .student-profile .form-control[readonly] {
+        background-color: #f8f9fa;
+        border-color: #e9ecef;
+    }
+
+    /* Yetkili profili için profesyonel görünüm */
+    .authority-profile .card-header {
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .authority-profile .form-label {
+        font-weight: 600;
+        color: #495057;
+    }
+</style>-danger';

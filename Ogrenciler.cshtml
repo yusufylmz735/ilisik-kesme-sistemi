@@ -1,0 +1,407 @@
+﻿@model List<HayataAtilmaFormu.Models.Ogrenci>
+
+@{
+    ViewData["Title"] = "Öğrenci Yönetimi";
+}
+<div class="fixed-admin-nav">
+    <a href="@Url.Action("Index", "Admin")" class="btn btn-primary btn-sm"
+       style="position: fixed; top: 80px; right: 20px; z-index: 1050; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+        <i class="fas fa-home"></i> Admin
+    </a>
+</div>
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">Öğrenci Yönetimi</h1>
+            <small class="text-muted">Toplam @ViewBag.ToplamKayit öğrenci</small>
+        </div>
+    </div>
+
+    @if (ViewBag.Error != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @ViewBag.Error
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Filtreler -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label for="durum" class="form-label">Durum</label>
+                    <select name="durum" id="durum" class="form-select">
+                        <option value="Tumu" selected="@(ViewBag.Durum == "Tumu" ? "selected" : null)">Tümü</option>
+                        <option value="Aktif" selected="@(ViewBag.Durum == "Aktif" ? "selected" : null)">Aktif</option>
+                        <option value="Pasif" selected="@(ViewBag.Durum == "Pasif" ? "selected" : null)">Pasif</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label for="arama" class="form-label">Arama</label>
+                    <input type="text" name="arama" id="arama" class="form-control" 
+                           value="@ViewBag.Arama" placeholder="Ad, soyad, öğrenci no veya e-posta...">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">&nbsp;</label>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-search"></i> Ara
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toplu İşlem Kontrolleri -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="selectAll">
+                        <label class="form-check-label fw-bold" for="selectAll">
+                            Tümünü Seç
+                        </label>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="btn-group float-end" role="group">
+                        <button type="button" class="btn btn-warning btn-sm" onclick="topluPasifYap()">
+                            <i class="fas fa-pause"></i> Seçilenleri Pasif Yap
+                        </button>
+                        <button type="button" class="btn btn-success btn-sm" onclick="topluAktifYap()">
+                            <i class="fas fa-play"></i> Seçilenleri Aktif Yap
+                        </button>
+                        <button type="button" class="btn btn-danger btn-sm" onclick="topluSil()">
+                            <i class="fas fa-trash"></i> Seçilenleri Sil
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Öğrenci Tablosu -->
+    <div class="card">
+        <div class="card-body">
+            @if (Model.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th width="50">
+                                    <input type="checkbox" id="selectAllHeader" class="form-check-input">
+                                </th>
+                                <th>Öğrenci No</th>
+                                <th>Ad Soyad</th>
+                                <th>E-posta</th>
+                                <th>Fakülte</th>
+                                <th>Bölüm</th>
+                                <th>Kayıt Tarihi</th>
+                                <th>Durum</th>
+                                <th width="150">İşlemler</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var ogrenci in Model)
+                            {
+                                <tr>
+                                    <td>
+                                        <input type="checkbox" class="form-check-input student-checkbox" 
+                                               value="@ogrenci.Id">
+                                    </td>
+                                    <td>
+                                        <strong>@ogrenci.OgrenciNo</strong>
+                                    </td>
+                                    <td>
+                                        <a href="@Url.Action("OgrenciDetay", new { id = ogrenci.Id })" 
+                                           class="text-decoration-none">
+                                            @ogrenci.TamAd
+                                        </a>
+                                    </td>
+                                    <td>
+                                        <a href="mailto:@ogrenci.Email" class="text-muted">
+                                            @ogrenci.Email
+                                        </a>
+                                    </td>
+                                    <td>@ogrenci.Fakulte?.FakulteAdi</td>
+                                    <td>@ogrenci.Bolum?.BolumAdi</td>
+                                    <td>
+                                        <small class="text-muted">
+                                            @ogrenci.KayitTarihi.ToString("dd/MM/yyyy")
+                                        </small>
+                                    </td>
+                                    <td>
+                                        <span class="badge @(ogrenci.Aktif ? "bg-success" : "bg-danger")">
+                                            @(ogrenci.Aktif ? "Aktif" : "Pasif")
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <a href="@Url.Action("OgrenciDetay", new { id = ogrenci.Id })" 
+                                               class="btn btn-outline-primary btn-sm" title="Detay">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            
+                                            @if (ogrenci.Aktif)
+                                            {
+                                                <button type="button" class="btn btn-outline-warning btn-sm" 
+                                                        title="Pasif Yap"
+                                                        onclick="ogrenciPasifYap(@ogrenci.Id, '@ogrenci.TamAd')">
+                                                    <i class="fas fa-pause"></i>
+                                                </button>
+                                            }
+                                            else
+                                            {
+                                                <button type="button" class="btn btn-outline-success btn-sm" 
+                                                        title="Aktif Yap"
+                                                        onclick="ogrenciGeriYukle(@ogrenci.Id, '@ogrenci.TamAd')">
+                                                    <i class="fas fa-play"></i>
+                                                </button>
+                                            }
+
+                                            <button type="button" class="btn btn-outline-danger btn-sm"
+                                                    title="Kalıcı Sil"
+                                                    onclick="ogrenciSil(@ogrenci.Id, '@ogrenci.TamAd', true)">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Sayfalama -->
+                @if (ViewBag.ToplamSayfa > 1)
+                {
+                    <nav aria-label="Sayfalama">
+                        <ul class="pagination justify-content-center mt-4">
+                            @if (ViewBag.MevcutSayfa > 1)
+                            {
+                                <li class="page-item">
+                                    <a class="page-link" href="@Url.Action("Ogrenciler", new { sayfa = ViewBag.MevcutSayfa - 1, durum = ViewBag.Durum, arama = ViewBag.Arama })">
+                                        <i class="fas fa-chevron-left"></i>
+                                    </a>
+                                </li>
+                            }
+
+                            @for (int i = Math.Max(1, ViewBag.MevcutSayfa - 2); i <= Math.Min(ViewBag.ToplamSayfa, ViewBag.MevcutSayfa + 2); i++)
+                            {
+                                <li class="page-item @(i == ViewBag.MevcutSayfa ? "active" : "")">
+                                    <a class="page-link" href="@Url.Action("Ogrenciler", new { sayfa = i, durum = ViewBag.Durum, arama = ViewBag.Arama })">
+                                        @i
+                                    </a>
+                                </li>
+                            }
+
+                            @if (ViewBag.MevcutSayfa < ViewBag.ToplamSayfa)
+                            {
+                                <li class="page-item">
+                                    <a class="page-link" href="@Url.Action("Ogrenciler", new { sayfa = ViewBag.MevcutSayfa + 1, durum = ViewBag.Durum, arama = ViewBag.Arama })">
+                                        <i class="fas fa-chevron-right"></i>
+                                    </a>
+                                </li>
+                            }
+                        </ul>
+                    </nav>
+                }
+            }
+            else
+            {
+                <div class="text-center text-muted py-5">
+                    <i class="fas fa-users fa-3x mb-3"></i>
+                    <h5>Öğrenci Bulunamadı</h5>
+                    <p>Arama kriterlerinize uygun öğrenci bulunmamaktadır.</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Durum select'ini ayarla
+            $('#durum').val('@ViewBag.Durum');
+        });
+
+        // Tümünü seç/seçme
+        $('#selectAll, #selectAllHeader').change(function() {
+            const isChecked = $(this).is(':checked');
+            $('.student-checkbox').prop('checked', isChecked);
+            $('#selectAll, #selectAllHeader').prop('checked', isChecked);
+        });
+
+        $('.student-checkbox').change(function() {
+            const totalCheckboxes = $('.student-checkbox').length;
+            const checkedCheckboxes = $('.student-checkbox:checked').length;
+            $('#selectAll, #selectAllHeader').prop('checked', totalCheckboxes === checkedCheckboxes);
+        });
+
+        // Tekil işlemler
+        function ogrenciPasifYap(id, isim) {
+            if (confirm(`${isim} isimli öğrenci pasif yapılacak. Emin misiniz?`)) {
+                $.post('@Url.Action("OgrenciSil", "Admin")', { 
+                    id: id, 
+                    hardDelete: false,
+                    __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                })
+                .done(function(result) {
+                    if (result.success) {
+                        showAlert(result.message, 'success');
+                        setTimeout(() => location.reload(), 1500);
+                    } else {
+                        showAlert(result.message, 'danger');
+                    }
+                });
+            }
+        }
+
+        function ogrenciSil(id, isim, hardDelete) {
+            const mesaj = hardDelete 
+                ? `${isim} isimli öğrenci kalıcı olarak silinecek. Bu işlem geri alınamaz!`
+                : `${isim} isimli öğrenci pasif yapılacak.`;
+            
+            if (confirm(mesaj)) {
+                $.post('@Url.Action("OgrenciSil", "Admin")', { 
+                    id: id, 
+                    hardDelete: hardDelete,
+                    __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                })
+                .done(function(result) {
+                    if (result.success) {
+                        showAlert(result.message, 'success');
+                        setTimeout(() => location.reload(), 1500);
+                    } else {
+                        showAlert(result.message, 'danger');
+                    }
+                });
+            }
+        }
+
+        function ogrenciGeriYukle(id, isim) {
+            if (confirm(`${isim} isimli öğrenci aktif yapılacak. Emin misiniz?`)) {
+                $.post('@Url.Action("OgrenciGeriYukle", "Admin")', { 
+                    id: id,
+                    __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                })
+                .done(function(result) {
+                    if (result.success) {
+                        showAlert(result.message, 'success');
+                        setTimeout(() => location.reload(), 1500);
+                    } else {
+                        showAlert(result.message, 'danger');
+                    }
+                });
+            }
+        }
+
+        // Toplu işlemler
+        function topluPasifYap() {
+            const seciliIds = getSeciliIds();
+            if (seciliIds.length === 0) {
+                showAlert('Lütfen en az bir öğrenci seçin.', 'warning');
+                return;
+            }
+
+            if (confirm(`${seciliIds.length} öğrenci pasif yapılacak. Emin misiniz?`)) {
+                $.post('@Url.Action("TopluOgrenciSil", "Admin")', { 
+                    ogrenciIds: seciliIds, 
+                    hardDelete: false,
+                    __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                })
+                .done(function(result) {
+                    if (result.success) {
+                        showAlert(result.message, 'success');
+                        setTimeout(() => location.reload(), 2000);
+                    } else {
+                        showAlert(result.message, 'danger');
+                    }
+                });
+            }
+        }
+
+        function topluAktifYap() {
+            const seciliIds = getSeciliIds();
+            if (seciliIds.length === 0) {
+                showAlert('Lütfen en az bir öğrenci seçin.', 'warning');
+                return;
+            }
+
+            if (confirm(`${seciliIds.length} öğrenci aktif yapılacak. Emin misiniz?`)) {
+                // Toplu aktif yapma işlemi için ayrı endpoint gerekebilir
+                let basariliSayac = 0;
+                seciliIds.forEach(id => {
+                    $.post('@Url.Action("OgrenciGeriYukle", "Admin")', { 
+                        id: id,
+                        __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                    })
+                    .done(function(result) {
+                        basariliSayac++;
+                        if (basariliSayac === seciliIds.length) {
+                            showAlert('Seçili öğrenciler aktif yapıldı.', 'success');
+                            setTimeout(() => location.reload(), 2000);
+                        }
+                    });
+                });
+            }
+        }
+
+        function topluSil() {
+            const seciliIds = getSeciliIds();
+            if (seciliIds.length === 0) {
+                showAlert('Lütfen en az bir öğrenci seçin.', 'warning');
+                return;
+            }
+
+            if (confirm(`${seciliIds.length} öğrenci silinecek. Emin misiniz?`)) {
+                $.post('@Url.Action("TopluOgrenciSil", "Admin")', { 
+                    ogrenciIds: seciliIds, 
+                    hardDelete: false,
+                    __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                })
+                .done(function(result) {
+                    if (result.success) {
+                        showAlert(result.message, 'success');
+                        if (result.details && result.details.length > 0) {
+                            console.log('Hata detayları:', result.details);
+                        }
+                        setTimeout(() => location.reload(), 2000);
+                    } else {
+                        showAlert(result.message, 'danger');
+                    }
+                });
+            }
+        }
+
+        function getSeciliIds() {
+            return $('.student-checkbox:checked').map(function() {
+                return parseInt($(this).val());
+            }).get();
+        }
+
+        function showAlert(message, type) {
+            const alertDiv = $(`
+                <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `);
+            
+            $('.container-fluid').prepend(alertDiv);
+            
+            setTimeout(() => {
+                alertDiv.fadeOut();
+            }, 5000);
+        }
+    </script>
+}
+
+<!-- CSRF Token -->
+@Html.AntiForgeryToken()

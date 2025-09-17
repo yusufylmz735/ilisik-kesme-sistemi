@@ -1,0 +1,416 @@
+﻿@model HayataAtilmaFormu.Models.Basvuru
+@{
+    ViewData["Title"] = "Başvuru Detay";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-0">
+                        <i class="fas fa-file-alt text-primary"></i> Başvuru Detayı
+                    </h1>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item">
+                                <a href="@Url.Action("Index", "Yetkili")">Ana Sayfa</a>
+                            </li>
+                            <li class="breadcrumb-item">
+                                <a href="@Url.Action("Basvurular", "Yetkili")">Başvurular</a>
+                            </li>
+                            <li class="breadcrumb-item active">Başvuru Detayı</li>
+                        </ol>
+                    </nav>
+                </div>
+                <div>
+                    <a href="@Url.Action("Basvurular", "Yetkili")" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left"></i> Geri Dön
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card mb-4 shadow-sm">
+                <div class="card-header bg-gradient text-white" style="background: linear-gradient(45deg, #1f2f51, #314467);">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="mb-0">@Model.Ogrenci.TamAd</h4>
+                            <small class="text-white-50">@Model.Ogrenci.OgrenciNo</small>
+                        </div>
+                        <div class="text-end">
+                            <div class="badge bg-light text-dark fs-6">
+                                @Model.Ogrenci.Bolum.BolumAdi
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <ul class="list-unstyled">
+                                <li class="mb-2"><i class="fas fa-university text-primary me-2"></i><strong>Fakülte:</strong> @Model.Ogrenci.Fakulte.FakulteAdi</li>
+                                <li class="mb-2"><i class="fas fa-graduation-cap text-primary me-2"></i><strong>Bölüm:</strong> @Model.Ogrenci.Bolum.BolumAdi</li>
+                                <li class="mb-2"><i class="fas fa-envelope text-primary me-2"></i><strong>E-posta:</strong> <a href="mailto:@Model.Ogrenci.Email">@Model.Ogrenci.Email</a></li>
+                                @if (!string.IsNullOrEmpty(Model.Ogrenci.Telefon))
+                                {
+                                    <li class="mb-2"><i class="fas fa-phone text-primary me-2"></i><strong>Telefon:</strong> <a href="tel:@Model.Ogrenci.Telefon">@Model.Ogrenci.Telefon</a></li>
+                                }
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <ul class="list-unstyled">
+                                <li class="mb-2"><i class="fas fa-calendar text-primary me-2"></i><strong>Başvuru Tarihi:</strong> @Model.BasvuruTarihi.ToString("dd/MM/yyyy HH:mm")</li>
+                                <li class="mb-2"><i class="fas fa-tags text-primary me-2"></i><strong>Başvuru Türü:</strong> <span class="badge bg-primary fs-6">@Model.BasvuruTuru</span></li>
+                                <li class="mb-2">
+                                    <i class="fas fa-info-circle text-primary me-2"></i><strong>Durum:</strong>
+                                    @{
+                                        var aktifOnay = Model.OnayDetaylari.FirstOrDefault(x => x.Durum == "Beklemede");
+                                        var tamamlananSayisi = Model.OnayDetaylari.Count(x => x.Durum == "Onaylandi");
+                                        var toplamSayisi = Model.OnayDetaylari.Count;
+                                        var reddedilenDetay = Model.OnayDetaylari.FirstOrDefault(x => x.Durum == "Reddedildi");
+                                    }
+                                    @if (reddedilenDetay != null)
+                                    {
+                                        <span class="badge bg-danger">
+                                            <i class="fas fa-times"></i> Reddedildi
+                                        </span>
+                                    }
+                                    else if (aktifOnay != null)
+                                    {
+                                        <span class="badge bg-warning text-dark">
+                                            <i class="fas fa-clock"></i> İnceleniyor
+                                        </span>
+                                    }
+                                    else if (Model.OnayDetaylari.All(x => x.Durum == "Onaylandi"))
+                                    {
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-check"></i> Tamamlandı
+                                        </span>
+                                    }
+                                </li>
+                                <li class="mb-2"><strong><i class="fas fa-hourglass-half text-primary me-2"></i> Geçen Süre:</strong> @((DateTime.Now - Model.BasvuruTarihi).Days) gün</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(Model.Aciklama))
+                    {
+                        <hr>
+                        <div class="mt-3">
+                            <h6><i class="fas fa-comment-dots text-primary"></i> Öğrenci Açıklaması:</h6>
+                            <div class="bg-light p-3 rounded border">
+                                @Model.Aciklama
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="card mb-4 shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-list-ol text-primary"></i> Onay Süreci
+                    </h5>
+                    <div class="progress mt-2">
+                        <div class="progress-bar bg-success" role="progressbar"
+                             style="width: @((double)tamamlananSayisi / toplamSayisi * 100)%"
+                             aria-valuenow="@tamamlananSayisi" aria-valuemin="0" aria-valuemax="@toplamSayisi">
+                        </div>
+                    </div>
+                    <small class="text-muted d-block text-end mt-1">@tamamlananSayisi / @toplamSayisi aşama tamamlandı</small>
+                </div>
+                <div class="card-body">
+                    <div class="timeline">
+                        @foreach (var onay in Model.OnayDetaylari.OrderBy(x => x.AsamaNo))
+                        {
+                            var statusClass = onay.Durum switch
+                            {
+                                "Onaylandi" => "completed",
+                                "Beklemede" => "current",
+                                "Reddedildi" => "rejected",
+                                _ => ""
+                            };
+                            <div class="timeline-item @statusClass">
+                                <div class="timeline-point"></div>
+                                <div class="timeline-panel">
+                                    <div class="timeline-heading">
+                                        <h6 class="timeline-title">
+                                            @onay.AsamaNo. @onay.AsamaAdi
+                                            @if (onay.Yetkili != null)
+                                            {
+                                                <span> - @onay.Yetkili.AdSoyad</span>
+                                            }
+                                            else
+                                            {
+                                                <span> - Henüz atanmadı</span>
+                                            }
+                                        </h6>
+                                        @if (onay.OnayTarihi.HasValue)
+                                        {
+                                            <small class="text-muted"><i class="fas fa-clock"></i> @onay.OnayTarihi.Value.ToString("dd/MM/yyyy HH:mm")</small>
+                                        }
+                                        else
+                                        {
+                                            <small class="text-muted">İşlem Bekleniyor</small>
+                                        }
+                                    </div>
+                                    <div class="timeline-body mt-2">
+                                        @if (!string.IsNullOrEmpty(onay.Aciklama))
+                                        {
+                                            <p class="text-muted mt-1 mb-0"><i class="fas fa-comment me-1"></i> Açıklama: <em>@onay.Aciklama</em></p>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            @{
+                var canApprove = ViewBag.CanApprove ?? false;
+                var isMyStage = ViewBag.IsMyStage ?? false;
+                var approvalMessage = ViewBag.ApprovalMessage ?? "";
+                var myDecision = ViewBag.MyDecision;
+            }
+
+            @* YETKİ KONTROLÜNE GÖRE KOŞULLU GÖRÜNTÜLEME *@
+            @if (canApprove)
+            {
+                <div class="card border-primary mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h6 class="card-title mb-0">
+                            <i class="fas fa-hand-paper"></i> İşlem Gerekli
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-info border-info text-info">
+                            <i class="fas fa-info-circle"></i>
+                            <strong>Bu başvuru sizin onayınızı bekliyor.</strong><br>
+                            Lütfen başvuruyu inceleyin ve karar verin.
+                        </div>
+
+                        <form id="onayForm">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="basvuruId" value="@Model.Id">
+
+                            <div class="mb-3">
+                                <label for="aciklama" class="form-label"><i class="fas fa-comment-alt text-primary"></i> Açıklama (İsteğe bağlı):</label>
+                                <textarea class="form-control" id="aciklama" name="aciklama" rows="3"
+                                      placeholder="Bu işlem ile ilgili açıklamanızı yazabilirsiniz..."></textarea>
+                            </div>
+
+                            <div class="d-grid gap-2">
+                                <button type="button" class="btn btn-success btn-lg" onclick="submitDecision('Onaylandi')">
+                                    <i class="fas fa-check-circle"></i> Onayla
+                                </button>
+                                <button type="button" class="btn btn-danger btn-lg" onclick="submitDecision('Reddedildi')">
+                                    <i class="fas fa-times-circle"></i> Reddet
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            }
+            else if (isMyStage && !string.IsNullOrEmpty(myDecision))
+            {
+                @* KARARINI VERMİŞ *@
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h6 class="card-title mb-0">
+                            <i class="fas fa-info-circle"></i> Bilgi
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert @(myDecision == "Onaylandi" ? "alert-success" : "alert-danger")">
+                            <i class="fas @(myDecision == "Onaylandi" ? "fa-check-circle" : "fa-times-circle")"></i>
+                            <strong>Bu başvuruyu @(myDecision == "Onaylandi" ? "onayladınız" : "reddettiniz").</strong>
+                        </div>
+                    </div>
+                </div>
+            }
+            else
+            {
+                @* YETKİ YOK VEYA AŞAMA DEĞİL *@
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h6 class="card-title mb-0">
+                            <i class="fas fa-info-circle"></i> Bilgi
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-secondary">
+                            <i class="fas fa-info-circle"></i>
+                            @if (!string.IsNullOrEmpty(approvalMessage))
+                            {
+                                @approvalMessage
+                            }
+                            else
+                            {
+                                <span>Bu başvuru için herhangi bir işleminiz bulunmuyor.</span>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<style>
+    .timeline {
+        position: relative;
+        padding: 0;
+        list-style: none;
+    }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 20px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background-color: #e9ecef;
+        }
+
+    .timeline-item {
+        margin-bottom: 30px;
+        position: relative;
+    }
+
+    .timeline-point {
+        position: absolute;
+        top: 6px;
+        left: 14px;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background-color: #fff;
+        border: 2px solid #e9ecef;
+        z-index: 1;
+    }
+
+    .timeline-item.completed .timeline-point {
+        background-color: #28a745;
+        border-color: #28a745;
+    }
+
+    .timeline-item.current .timeline-point {
+        background-color: #ffc107;
+        border-color: #ffc107;
+        animation: pulse 1.5s infinite;
+    }
+
+    .timeline-item.rejected .timeline-point {
+        background-color: #dc3545;
+        border-color: #dc3545;
+    }
+
+    .timeline-panel {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 20px;
+        margin-left: 50px;
+        position: relative;
+        border: 1px solid #e9ecef;
+    }
+
+    .timeline-heading {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+</style>
+<script>
+    // Fonksiyonu global scope'da tanımla
+    window.submitDecision = function(karar) {
+        console.log('submitDecision çağrıldı:', karar);
+
+        const aciklama = document.getElementById('aciklama').value || '';
+        const basvuruId = document.querySelector('input[name="basvuruId"]').value;
+        const tokenElement = document.querySelector('input[name="__RequestVerificationToken"]');
+
+        if (!tokenElement) {
+            alert('CSRF token bulunamadı!');
+            return;
+        }
+
+        const token = tokenElement.value;
+
+        console.log('Parametreler:', { basvuruId, karar, aciklama, token });
+
+        if (!basvuruId || !karar) {
+            alert('Geçersiz parametreler!');
+            return;
+        }
+
+        if (karar === 'Reddedildi' && !aciklama.trim()) {
+            alert('Red durumunda açıklama zorunludur!');
+            return;
+        }
+
+        const confirmMessage = karar === 'Onaylandi' ?
+            'Bu başvuruyu onaylamak istediğinize emin misiniz?' :
+            'Bu başvuruyu reddetmek istediğinize emin misiniz?';
+
+        if (!confirm(confirmMessage)) {
+            return;
+        }
+
+        const button = event.target;
+        const originalText = button.innerHTML;
+        button.disabled = true;
+        button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> İşleniyor...';
+
+        // FormData kullanarak düzgün format
+        const formData = new FormData();
+        formData.append('basvuruId', basvuruId);
+        formData.append('karar', karar);
+        formData.append('aciklama', aciklama);
+        formData.append('__RequestVerificationToken', token);
+
+        console.log('Form data hazırlandı, istek gönderiliyor...');
+
+        fetch('/Yetkili/OnayVer', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => {
+            console.log('Response alındı:', response.status);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Response data:', data);
+            if (data && data.success) {
+                alert(data.message || 'İşlem başarılı');
+                if (data.redirectUrl) {
+                    window.location.href = data.redirectUrl;
+                } else {
+                    location.reload();
+                }
+            } else {
+                alert('Hata: ' + (data.message || 'Bilinmeyen hata'));
+                button.disabled = false;
+                button.innerHTML = originalText;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Bir hata oluştu: ' + error.message);
+            button.disabled = false;
+            button.innerHTML = originalText;
+        });
+    };
+</script>

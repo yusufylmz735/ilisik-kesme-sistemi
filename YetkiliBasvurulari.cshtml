@@ -1,0 +1,306 @@
+﻿@model List<HayataAtilmaFormu.Models.Yetkili>
+@{
+    ViewData["Title"] = "Yetkili Başvuruları";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<div class="fixed-admin-nav">
+    <a href="@Url.Action("Index", "Admin")" class="btn btn-primary btn-sm"
+       style="position: fixed; top: 80px; right: 20px; z-index: 1050; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+        <i class="fas fa-home"></i> Admin
+    </a>
+</div>
+<div class="container-fluid">
+    @Html.AntiForgeryToken()
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-0">
+                        <i class="fas fa-list-alt text-primary"></i> Yetkili Başvuruları
+                    </h1>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item">
+                                <a href="@Url.Action("Index", "Admin")">Dashboard</a>
+                            </li>
+                            <li class="breadcrumb-item active">Yetkili Başvuruları</li>
+                        </ol>
+                    </nav>
+                </div>
+                <div>
+                    <select class="form-select form-select-sm" onchange="window.location.href='@Url.Action("YetkiliBasvurulari", "Admin")?durum=' + this.value">
+                        @if (ViewBag.Durum == "Tumu" || string.IsNullOrEmpty(ViewBag.Durum))
+                        {
+                            <option value="Tumu" selected>Tümü</option>
+                        }
+                        else
+                        {
+                            <option value="Tumu">Tümü</option>
+                        }
+                        @if (ViewBag.Durum == "Beklemede")
+                        {
+                            <option value="Beklemede" selected>Onay Bekleyen</option>
+                        }
+                        else
+                        {
+                            <option value="Beklemede">Onay Bekleyen</option>
+                        }
+                        @if (ViewBag.Durum == "Onaylandi")
+                        {
+                            <option value="Onaylandi" selected>Onaylanan</option>
+                        }
+                        else
+                        {
+                            <option value="Onaylandi">Onaylanan</option>
+                        }
+                        @if (ViewBag.Durum == "Reddedildi")
+                        {
+                            <option value="Reddedildi" selected>Reddedilen</option>
+                        }
+                        else
+                        {
+                            <option value="Reddedildi">Reddedilen</option>
+                        }
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body table-responsive">
+                    <table class="table table-hover table-bordered align-middle">
+                        <thead>
+                            <tr>
+                                <th>Ad Soyad</th>
+                                <th>E-posta</th>
+                                <th>Fakülte/Enstitü</th>
+                                <th>Bölüm</th>
+                                <th>Başvuru Tarihi</th>
+                                <th>Durum</th>
+                                <th>İşlemler</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model != null && Model.Any())
+                            {
+                                @foreach (var yetkili in Model)
+                                {
+                                    <tr>
+                                        <td>@yetkili.AdSoyad</td>
+                                        <td>@yetkili.Email</td>
+                                        <td>@(yetkili.Fakulte?.FakulteAdi ?? "Belirtilmemiş")</td>
+                                        <td>@(yetkili.Bolum?.BolumAdi ?? "Belirtilmemiş")</td>
+                                        <td>@yetkili.KayitTarihi.ToString("dd/MM/yyyy HH:mm")</td>
+                                        <td>
+                                            @if (yetkili.OnayBekliyor)
+                                            {
+                                                <span class="badge bg-warning"><i class="fas fa-clock"></i> Beklemede</span>
+                                            }
+                                            else if (yetkili.Aktif)
+                                            {
+                                                <span class="badge bg-success"><i class="fas fa-check"></i> Onaylandı</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-danger"><i class="fas fa-times"></i> Reddedildi</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <a href="@Url.Action("YetkiliDetay", "Admin", new { id = yetkili.Id })" class="btn btn-outline-primary">
+                                                    <i class="fas fa-eye"></i> Detay
+                                                </a>
+                                                @if (yetkili.OnayBekliyor)
+                                                {
+                                                    <button class="btn btn-outline-success" onclick="onaylaYetkili(@yetkili.Id, '@yetkili.AdSoyad')">
+                                                        <i class="fas fa-check"></i> Onayla
+                                                    </button>
+                                                    <button class="btn btn-outline-danger" onclick="reddetYetkili(@yetkili.Id, '@yetkili.AdSoyad')">
+                                                        <i class="fas fa-times"></i> Reddet
+                                                    </button>
+                                                }
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="7" class="text-center">
+                                        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                                        <p class="text-muted">Bu kategoride yetkili başvurusu bulunmuyor.</p>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Onay Modal -->
+    <div class="modal fade" id="onayModal" tabindex="-1" aria-labelledby="onayModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="onayModalLabel"><i class="fas fa-check"></i> Yetkili Onayı</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="onayMesaji"></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                    <button type="button" class="btn btn-success" id="onayOnayBtn">Onayla</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reddet Modal -->
+    <div class="modal fade" id="reddetModal" tabindex="-1" aria-labelledby="reddetModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="reddetModalLabel"><i class="fas fa-times"></i> Yetkili Reddi</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="reddetMesaji"></p>
+                    <div class="form-group mt-3">
+                        <label for="reddetAciklama" class="form-label">Red Nedeni <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="reddetAciklama" rows="3" placeholder="Red nedeni giriniz..." required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                    <button type="button" class="btn btn-danger" id="reddetOnayBtn">Reddet</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function onaylaYetkili(id, adSoyad) {
+            $('#onayMesaji').text(`${adSoyad} adlı yetkiliyi onaylamak istediğinize emin misiniz?`);
+            $('#onayOnayBtn').off('click').on('click', function () {
+                // Loading durumu göster
+                $(this).prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Onaylanıyor...');
+
+                $.post('@Url.Action("YetkiliOnayla", "Admin")', {
+                    yetkiliId: id,
+                    karar: "Onayla",
+                    __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                })
+                .done(function (response) {
+                    $('#onayModal').modal('hide');
+                    if (response.success) {
+                        showAlert('success', response.message);
+                        setTimeout(() => {
+                            if (response.redirectUrl) {
+                                window.location.href = response.redirectUrl;
+                            } else {
+                                location.reload();
+                            }
+                        }, 1500);
+                    } else {
+                        showAlert('danger', response.message);
+                    }
+                })
+                .fail(function (xhr, status, error) {
+                    console.error('Onay hatası:', xhr.responseText);
+                    $('#onayModal').modal('hide');
+                    showAlert('danger', 'Onay sırasında bir hata oluştu! Lütfen tekrar deneyin.');
+                })
+                .always(function () {
+                    $('#onayOnayBtn').prop('disabled', false).html('Onayla');
+                });
+            });
+            $('#onayModal').modal('show');
+        }
+
+        function reddetYetkili(id, adSoyad) {
+            $('#reddetMesaji').text(`${adSoyad} adlı yetkiliyi reddetmek istediğinize emin misiniz?`);
+            $('#reddetAciklama').val('').removeClass('is-invalid');
+            $('#reddetOnayBtn').off('click').on('click', function () {
+                const aciklama = $('#reddetAciklama').val().trim();
+                if (!aciklama) {
+                    $('#reddetAciklama').addClass('is-invalid');
+                    showAlert('warning', 'Red nedeni girilmelidir!');
+                    return;
+                }
+
+                // Loading durumu göster
+                $(this).prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Reddediliyor...');
+
+                $.post('@Url.Action("YetkiliOnayla", "Admin")', {
+                    yetkiliId: id,
+                    karar: "Reddet",
+                    aciklama: aciklama,
+                    __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                })
+                .done(function (response) {
+                    $('#reddetModal').modal('hide');
+                    if (response.success) {
+                        showAlert('success', response.message);
+                        setTimeout(() => {
+                            if (response.redirectUrl) {
+                                window.location.href = response.redirectUrl;
+                            } else {
+                                location.reload();
+                            }
+                        }, 1500);
+                    } else {
+                        showAlert('danger', response.message);
+                    }
+                })
+                .fail(function (xhr, status, error) {
+                    console.error('Reddet hatası:', xhr.responseText);
+                    $('#reddetModal').modal('hide');
+                    showAlert('danger', 'Reddetme sırasında bir hata oluştu! Lütfen tekrar deneyin.');
+                })
+                .always(function () {
+                    $('#reddetOnayBtn').prop('disabled', false).html('Reddet');
+                });
+            });
+            $('#reddetModal').modal('show');
+        }
+
+        function showAlert(type, message) {
+            // Önceki alert'leri kaldır
+            $('.alert').alert('close');
+
+            const alertDiv = `<div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'danger' ? 'exclamation-triangle' : 'info-circle'}"></i>
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>`;
+            $('.container-fluid').prepend(alertDiv);
+
+            // 5 saniye sonra otomatik kapat
+            setTimeout(() => {
+                $('.alert').alert('close');
+            }, 5000);
+        }
+
+        // Red nedeni input'u için validation
+        $('#reddetAciklama').on('input', function() {
+            if ($(this).val().trim()) {
+                $(this).removeClass('is-invalid');
+            }
+        });
+    </script>
+}

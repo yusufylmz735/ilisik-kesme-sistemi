@@ -1,0 +1,480 @@
+﻿@model List<HayataAtilmaFormu.Models.Yetkili>
+@{
+    ViewData["Title"] = "Yetkili Yönetimi";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<div class="fixed-admin-nav">
+    <a href="@Url.Action("Index", "Admin")" class="btn btn-primary btn-sm"
+       style="position: fixed; top: 80px; right: 20px; z-index: 1050; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+        <i class="fas fa-home"></i> Admin
+    </a>
+</div>
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-0">
+                        <i class="fas fa-users-cog text-primary"></i> Yetkili Yönetimi
+                    </h1>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item">
+                                <a href="@Url.Action("Index", "Admin")">Dashboard</a>
+                            </li>
+                            <li class="breadcrumb-item active">Yetkili Yönetimi</li>
+                        </ol>
+                    </nav>
+                </div>
+                <div>
+                    <button class="btn btn-primary" onclick="yeniYetkili()">
+                        <i class="fas fa-plus"></i> Yeni Yetkili Ekle
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-0">@(Model?.Count(y => y.Aktif) ?? 0)</h4>
+                            <p class="mb-0">Aktif Yetkili</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-user-check fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toplu İşlem Kontrolleri -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-6">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="selectAll">
+                                <label class="form-check-label fw-bold" for="selectAll">
+                                    Tümünü Seç
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="btn-group float-end" role="group">
+                                <button type="button" class="btn btn-warning btn-sm" onclick="topluPasifYap()">
+                                    <i class="fas fa-pause"></i> Seçilenleri Pasif Yap
+                                </button>
+                                <button type="button" class="btn btn-success btn-sm" onclick="topluAktifYap()">
+                                    <i class="fas fa-play"></i> Seçilenleri Aktif Yap
+                                </button>
+                                <button type="button" class="btn btn-danger btn-sm" onclick="topluSil()">
+                                    <i class="fas fa-trash"></i> Seçilenleri Sil
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body table-responsive">
+                    <table class="table table-hover table-bordered align-middle">
+                        <thead>
+                            <tr>
+                                <th width="50">
+                                    <input type="checkbox" id="selectAllHeader" class="form-check-input">
+                                </th>
+                                <th>Ad Soyad</th>
+                                <th>E-posta</th>
+                                <th>Fakülte/Enstitü</th>
+                                <th>Bölüm</th>
+                                <th>Pozisyon</th>
+                                <th>Durum</th>
+                                <th>Kayıt Tarihi</th>
+                                <th>İşlemler</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var yetkili in Model)
+                            {
+                                <tr>
+                                    <td>
+                                        <input type="checkbox" class="form-check-input yetkili-checkbox"
+                                               value="@yetkili.Id">
+                                    </td>
+                                    <td>@yetkili.AdSoyad</td>
+                                    <td>@yetkili.Email</td>
+                                    <td>@(yetkili.Fakulte?.FakulteAdi ?? "Belirtilmemiş")</td>
+                                    <td>@(yetkili.Bolum?.BolumAdi ?? "Belirtilmemiş")</td>
+                                    <td>@yetkili.Pozisyon</td>
+                                    <td>
+                                        @if (yetkili.Aktif)
+                                        {
+                                            <span class="badge bg-success"><i class="fas fa-check"></i> Aktif</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-danger"><i class="fas fa-times"></i> Pasif</span>
+                                        }
+                                    </td>
+                                    <td>@yetkili.KayitTarihi.ToString("dd/MM/yyyy HH:mm")</td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="@Url.Action("YetkiliDetay", "Admin", new { id = yetkili.Id })" class="btn btn-outline-primary">
+                                                <i class="fas fa-eye"></i> Detay
+                                            </a>
+                                            <button class="btn btn-outline-warning" onclick="durumDegistir(@yetkili.Id, @(yetkili.Aktif ? "false" : "true"), '@yetkili.AdSoyad')">
+                                                <i class="fas fa-power-off"></i> @(yetkili.Aktif ? "Pasif Yap" : "Aktif Yap")
+                                            </button>
+                                            <button class="btn btn-outline-danger" onclick="silYetkili(@yetkili.Id, '@yetkili.AdSoyad')">
+                                                <i class="fas fa-trash"></i> Sil
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Yeni Yetkili Modal -->
+    <div class="modal fade" id="yeniYetkiliModal" tabindex="-1" aria-labelledby="yeniYetkiliModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="yeniYetkiliModalLabel"><i class="fas fa-user-plus"></i> Yeni Yetkili Ekle</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="yeniYetkiliForm">
+                        @Html.AntiForgeryToken()
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label class="form-label">Ad Soyad <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" name="AdSoyad" required />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label class="form-label">E-posta <span class="text-danger">*</span></label>
+                                    <input type="email" class="form-control" name="Email" required />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label class="form-label">Telefon (isteğe bağlı)</label>
+                                    <input type="tel" class="form-control" name="Telefon" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label class="form-label">Pozisyon <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" name="Pozisyon" required />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label class="form-label">Fakülte <span class="text-danger">*</span></label>
+                                    <select class="form-select" name="FakulteId" id="modalFakulteSelect" required>
+                                        <option value="">Fakülte seçiniz...</option>
+                                        @foreach (var fakulte in ViewBag.Fakulteler)
+                                        {
+                                            <option value="@fakulte.Id">@fakulte.FakulteAdi</option>
+                                        }
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label class="form-label">Bölüm (isteğe bağlı)</label>
+                                    <select class="form-select" name="BolumId" id="modalBolumSelect">
+                                        <option value="">Önce fakülte seçiniz...</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label class="form-label">Onay Aşaması <span class="text-danger">*</span></label>
+                                    <select class="form-select" name="OnayAsamasi" required>
+                                        @foreach (var item in ViewBag.OnayAsamalari)
+                                        {
+                                            <option value="@item.Value">@item.Text</option>
+                                        }
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                    <button type="button" class="btn btn-primary" onclick="yeniYetkiliKaydet()">Kaydet</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Silme Onay Modal -->
+    <div class="modal fade" id="silModal" tabindex="-1" aria-labelledby="silModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="silModalLabel"><i class="fas fa-trash"></i> Yetkili Sil</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="silMesaji"></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                    <button type="button" class="btn btn-danger" id="silOnayBtn">Sil</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Tümünü seç/seçme functionality
+            $('#selectAll, #selectAllHeader').change(function() {
+                const isChecked = $(this).is(':checked');
+                $('.yetkili-checkbox').prop('checked', isChecked);
+                $('#selectAll, #selectAllHeader').prop('checked', isChecked);
+            });
+
+            $('.yetkili-checkbox').change(function() {
+                const totalCheckboxes = $('.yetkili-checkbox').length;
+                const checkedCheckboxes = $('.yetkili-checkbox:checked').length;
+                $('#selectAll, #selectAllHeader').prop('checked', totalCheckboxes === checkedCheckboxes);
+            });
+        });
+
+        function yeniYetkili() {
+            $('#yeniYetkiliForm')[0].reset();
+            $('#modalBolumSelect').html('<option value="">Önce fakülte seçiniz...</option>').prop('disabled', true);
+            $('#yeniYetkiliModal').modal('show');
+        }
+
+        function silYetkili(id, adSoyad) {
+            $('#silMesaji').text(`${adSoyad} adlı yetkiliyi silmek istediğinize emin misiniz?`);
+            $('#silOnayBtn').off('click').on('click', function () {
+                $.post('@Url.Action("YetkiliSil", "Admin")', {
+                    yetkiliId: id,
+                    __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                })
+                .done(function (response) {
+                    $('#silModal').modal('hide');
+                    if (response.success) {
+                        showAlert('success', response.message);
+                        setTimeout(() => location.reload(), 1500);
+                    } else {
+                        showAlert('danger', response.message);
+                    }
+                })
+                .fail(function () {
+                    $('#silModal').modal('hide');
+                    showAlert('danger', 'İşlem sırasında bir hata oluştu!');
+                });
+            });
+            $('#silModal').modal('show');
+        }
+
+        function durumDegistir(id, aktif, adSoyad) {
+            const durumText = aktif ? 'aktif' : 'pasif';
+            const onayMesaji = `${adSoyad} adlı yetkiliyi ${durumText} yapmak istediğinize emin misiniz?`;
+            if (confirm(onayMesaji)) {
+                $.post('@Url.Action("YetkiliDurumDegistir", "Admin")', {
+                    yetkiliId: id,
+                    aktif: aktif,
+                    __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                })
+                .done(function (response) {
+                    if (response.success) {
+                        showAlert('success', response.message);
+                        setTimeout(() => location.reload(), 1500);
+                    } else {
+                        showAlert('danger', response.message);
+                    }
+                })
+                .fail(function () {
+                    showAlert('danger', 'İşlem sırasında bir hata oluştu!');
+                });
+            }
+        }
+
+        function yeniYetkiliKaydet() {
+            const formData = $('#yeniYetkiliForm').serialize();
+            $.post('@Url.Action("YetkiliEkle", "Admin")', formData)
+                .done(function (response) {
+                    $('#yeniYetkiliModal').modal('hide');
+                    if (response.success) {
+                        showAlert('success', response.message);
+                        setTimeout(() => location.reload(), 1500);
+                    } else {
+                        showAlert('danger', response.message);
+                    }
+                })
+                .fail(function () {
+                    $('#yeniYetkiliModal').modal('hide');
+                    showAlert('danger', 'Yetkili eklenirken bir hata oluştu!');
+                });
+        }
+
+        // Toplu işlem fonksiyonları
+        function topluPasifYap() {
+            const seciliIds = getSeciliYetkiliIds();
+            if (seciliIds.length === 0) {
+                showAlert('warning', 'Lütfen en az bir yetkili seçin.');
+                return;
+            }
+
+            if (confirm(`${seciliIds.length} yetkili pasif yapılacak. Emin misiniz?`)) {
+                $.post('@Url.Action("TopluYetkiliSil", "Admin")', {
+                    yetkiliIds: seciliIds,
+                    hardDelete: false,
+                    __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                })
+                .done(function(result) {
+                    if (result.success) {
+                        showAlert('success', result.message);
+                        setTimeout(() => location.reload(), 2000);
+                    } else {
+                        showAlert('danger', result.message);
+                    }
+                })
+                .fail(function() {
+                    showAlert('danger', 'İşlem sırasında hata oluştu.');
+                });
+            }
+        }
+
+        function topluAktifYap() {
+            const seciliIds = getSeciliYetkiliIds();
+            if (seciliIds.length === 0) {
+                showAlert('warning', 'Lütfen en az bir yetkili seçin.');
+                return;
+            }
+
+            if (confirm(`${seciliIds.length} yetkili aktif yapılacak. Emin misiniz?`)) {
+                // Toplu aktif yapma için ayrı işlem
+                let basariliSayac = 0;
+                seciliIds.forEach(id => {
+                    $.post('@Url.Action("YetkiliDurumDegistir", "Admin")', {
+                        yetkiliId: id,
+                        aktif: true,
+                        __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                    })
+                    .done(function(result) {
+                        basariliSayac++;
+                        if (basariliSayac === seciliIds.length) {
+                            showAlert('success', 'Seçili yetkililer aktif yapıldı.');
+                            setTimeout(() => location.reload(), 2000);
+                        }
+                    });
+                });
+            }
+        }
+
+        function topluSil() {
+            const seciliIds = getSeciliYetkiliIds();
+            if (seciliIds.length === 0) {
+                showAlert('warning', 'Lütfen en az bir yetkili seçin.');
+                return;
+            }
+
+            if (confirm(`${seciliIds.length} yetkili kalıcı olarak silinecek. Bu işlem geri alınamaz!`)) {
+                $.post('@Url.Action("TopluYetkiliSil", "Admin")', {
+                    yetkiliIds: seciliIds,
+                    hardDelete: true,
+                    __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                })
+                .done(function(result) {
+                    if (result.success) {
+                        showAlert('success', result.message);
+                        if (result.details && result.details.length > 0) {
+                            console.log('Hata detayları:', result.details);
+                        }
+                        setTimeout(() => location.reload(), 2000);
+                    } else {
+                        showAlert('danger', result.message);
+                    }
+                })
+                .fail(function() {
+                    showAlert('danger', 'İşlem sırasında hata oluştu.');
+                });
+            }
+        }
+
+        function getSeciliYetkiliIds() {
+            return $('.yetkili-checkbox:checked').map(function() {
+                return parseInt($(this).val());
+            }).get();
+        }
+
+        function showAlert(type, message) {
+            const alertDiv = `<div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>`;
+            $('.container-fluid').prepend(alertDiv);
+            setTimeout(() => $('.alert').alert('close'), 5000);
+        }
+
+        $('#modalFakulteSelect').on('change', function () {
+            const fakulteId = $(this).val();
+            const $bolumSelect = $('#modalBolumSelect');
+
+            if (fakulteId) {
+                $bolumSelect.html('<option value="">Yükleniyor...</option>').prop('disabled', true);
+
+                $.get('@Url.Action("GetBolumler", "Admin")', { fakulteId: fakulteId })
+                    .done(function (data) {
+                        $bolumSelect.html('<option value="">Bölüm seçiniz...</option>');
+
+                        if (Array.isArray(data) && data.length > 0) {
+                            $.each(data, function (index, bolum) {
+                                $bolumSelect.append(`<option value="${bolum.id}">${bolum.bolumAdi}</option>`);
+                            });
+                            $bolumSelect.prop('disabled', false);
+                        } else if (data && data.success === false) {
+                            $bolumSelect.html(`<option value="">Hata: ${data.message}</option>`);
+                        } else {
+                            $bolumSelect.html('<option value="">Bu fakültede bölüm bulunmuyor</option>');
+                        }
+                    })
+                    .fail(function (xhr, status, error) {
+                        $bolumSelect.html('<option value="">Hata oluştu, tekrar deneyin</option>').prop('disabled', true);
+                        showAlert('warning', 'Bölümler yüklenirken bir hata oluştu. Lütfen tekrar deneyin.');
+                    });
+            } else {
+                $bolumSelect.html('<option value="">Önce fakülte seçiniz...</option>').prop('disabled', true);
+            }
+        });
+    </script>
+}
+
+<!-- CSRF Token -->
+@Html.AntiForgeryToken()

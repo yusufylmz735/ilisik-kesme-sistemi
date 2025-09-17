@@ -1,0 +1,463 @@
+﻿@{
+    ViewData["Title"] = "Yeni Başvuru";
+    var ogrenci = ViewBag.Ogrenci as HayataAtilmaFormu.Models.Ogrenci;
+}
+
+<div class="container-fluid">
+    <!-- Sayfa Başlığı -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="mb-0 text-dark">
+            <i class="fas fa-file-plus me-2 text-primary"></i>Yeni Başvuru
+        </h3>
+        <small class="text-muted">
+            <i class="fas fa-calendar-alt me-1"></i>
+            @DateTime.Now.ToString("dd/MM/yyyy")
+        </small>
+    </div>
+
+    <!-- Alert Messages -->
+    @if (!string.IsNullOrEmpty(ViewBag.Error as string))
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle me-2"></i>@ViewBag.Error
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(ViewBag.InfoMessage as string))
+    {
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            <i class="fas fa-info-circle me-2"></i>@ViewBag.InfoMessage
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(ViewBag.Success as string))
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i>@ViewBag.Success
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="row g-4">
+        <!-- Sol Kolon - Form -->
+        <div class="col-lg-8">
+            <!-- Öğrenci Bilgileri Özeti -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-0 py-3">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-user-graduate text-primary me-2"></i>Öğrenci Bilgileri
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <small class="text-muted d-block">Ad Soyad</small>
+                            <span class="fw-medium">@ogrenci?.TamAd</span>
+                        </div>
+                        <div class="col-md-4">
+                            <small class="text-muted d-block">Öğrenci No</small>
+                            <span class="fw-medium">@ogrenci?.OgrenciNo</span>
+                        </div>
+                        <div class="col-md-4">
+                            <small class="text-muted d-block">Eğitim Türü</small>
+                            <span class="badge bg-primary">@ogrenci?.OgrenciTuru</span>
+                        </div>
+                        <div class="col-md-6">
+                            <small class="text-muted d-block">Fakülte</small>
+                            <span class="fw-medium">@ogrenci?.Fakulte?.FakulteAdi</span>
+                        </div>
+                        <div class="col-md-6">
+                            <small class="text-muted d-block">Bölüm</small>
+                            <span class="fw-medium">@ogrenci?.Bolum?.BolumAdi</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Başvuru Formu -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0 py-3">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-edit text-success me-2"></i>Başvuru Formu
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form asp-action="YeniBasvuru" method="post" enctype="multipart/form-data" id="basvuruForm" novalidate>
+                        @Html.AntiForgeryToken()
+
+                        <!-- Başvuru Türü -->
+                        <div class="mb-4">
+                            <label for="basvuruTuru" class="form-label fw-medium">
+                                Başvuru Türü <span class="text-danger">*</span>
+                            </label>
+                            <select class="form-select" id="basvuruTuru" name="basvuruTuru" required>
+                                <option value="">-- Başvuru türünü seçiniz --</option>
+                                <optgroup label="Normal İşlemler">
+                                    <option value="Mezuniyet">Mezuniyet</option>
+                                    <option value="Yatay Geçiş">Yatay Geçiş</option>
+                                    <option value="Dikey Geçiş">Dikey Geçiş</option>
+                                    <option value="Nakil">Nakil</option>
+                                </optgroup>
+                                <optgroup label="Kayıt İşlemleri">
+                                    <option value="Kayıt Dondurma">Kayıt Dondurma</option>
+                                    <option value="Kayıt Silme">Kayıt Silme</option>
+                                    <option value="Çekilme">Çekilme (Kendi İsteği)</option>
+                                </optgroup>
+                                <optgroup label="Özel Durumlar">
+                                    <option value="Vefat">Vefat</option>
+                                    <option value="Askerlik">Askerlik</option>
+                                    <option value="Sağlık Raporu">Sağlık Raporu</option>
+                                </optgroup>
+                                <optgroup label="Zorunlu Çıkış">
+                                    <option value="Disiplin Cezası">Disiplin Cezası</option>
+                                    <option value="Akademik Yetersizlik">Akademik Yetersizlik</option>
+                                </optgroup>
+                            </select>
+                            <div class="form-text" id="basvuruAciklama">İlişik kesme nedeninizi seçiniz</div>
+                        </div>
+
+                        <!-- Gerekli Belgeler Uyarısı -->
+                        <div id="gereklibelgeler" class="alert alert-info" style="display: none;">
+                            <h6 class="mb-2">Bu başvuru için gerekli belgeler:</h6>
+                            <ul id="belgeListe" class="mb-0"></ul>
+                        </div>
+
+                        <!-- Dosya Yükleme -->
+                        <div class="mb-4">
+                            <label for="belgeDosyasi" class="form-label fw-medium">
+                                Belge Yükle <span class="text-muted">(İsteğe bağlı)</span>
+                            </label>
+                            <div class="upload-area border-2 border-dashed border-primary rounded p-4 text-center bg-light">
+                                <input type="file" class="form-control position-absolute w-100 h-100 opacity-0"
+                                       id="belgeDosyasi" name="belgeDosyasi"
+                                       accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                                       style="top: 0; left: 0; cursor: pointer;">
+
+                                <div id="uploadDefault" class="upload-default">
+                                    <i class="fas fa-cloud-upload-alt fa-2x text-primary mb-2"></i>
+                                    <h6 class="text-primary mb-1">Dosya Seçmek İçin Tıklayın</h6>
+                                    <small class="text-muted">
+                                        PDF, JPG, PNG, DOC, DOCX - Maks. 5MB
+                                    </small>
+                                </div>
+
+                                <div id="uploadSelected" class="upload-selected d-none">
+                                    <i class="fas fa-file-alt fa-2x text-success mb-2"></i>
+                                    <h6 class="text-success mb-1">Dosya Seçildi</h6>
+                                    <p id="dosyaAdi" class="mb-1 fw-medium"></p>
+                                    <p id="dosyaBoyutu" class="text-muted small mb-2"></p>
+                                    <button type="button" class="btn btn-outline-danger btn-sm" id="dosyaTemizle">
+                                        <i class="fas fa-times me-1"></i>Kaldır
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Açıklama -->
+                        <div class="mb-4">
+                            <label for="aciklama" class="form-label fw-medium">
+                                Başvuru Açıklaması <span class="text-danger">*</span>
+                            </label>
+                            <textarea class="form-control" id="aciklama" name="aciklama" rows="4"
+                                      placeholder="Başvuru nedeninizi ve detaylarını açık bir şekilde yazınız..."
+                                      required minlength="20" maxlength="1000"></textarea>
+                            <div class="form-text d-flex justify-content-between">
+                                <span>En az 20 karakter gereklidir</span>
+                                <span id="karakterSayaci" class="text-muted">0 / 1000</span>
+                            </div>
+                        </div>
+
+                        <!-- Onay -->
+                        <div class="mb-4">
+                            <div class="card bg-warning bg-opacity-10 border-warning">
+                                <div class="card-body py-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="onayCheckbox" required>
+                                        <label class="form-check-label" for="onayCheckbox">
+                                            Verdiğim bilgilerin doğru olduğunu ve süreç hakkında bilgilendirme yapıldığını kabul ediyorum.
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Butonlar -->
+                        <div class="d-flex justify-content-between">
+                            <a href="@Url.Action("Index", "Ogrenci")" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-1"></i>Ana Sayfa
+                            </a>
+                            <button type="submit" class="btn btn-success px-4" id="submitBtn">
+                                <i class="fas fa-paper-plane me-2"></i>Başvuruyu Gönder
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sağ Kolon - Bilgiler -->
+        <div class="col-lg-4">
+            <!-- Önemli Bilgiler -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-warning text-dark border-0 py-3">
+                    <h6 class="card-title mb-0">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Önemli Bilgiler
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0 small">
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Sadece bir kez başvuru yapabilirsiniz
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Başvuru 8 aşamalı onay sürecinden geçer
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Ortalama işlem süresi: 10-15 iş günü
+                        </li>
+                        <li class="mb-0">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Durumunuzu sistem üzerinden takip edebilirsiniz
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Onay Süreci -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-info text-white border-0 py-3">
+                    <h6 class="card-title mb-0">
+                        <i class="fas fa-list-ol me-2"></i>
+                        Onay Süreci (@ogrenci?.OgrenciTuru)
+                    </h6>
+                </div>
+                <div class="card-body">
+                    @if (ogrenci?.OgrenciTuru == "Lisans" || ogrenci?.OgrenciTuru == "OnLisans")
+                    {
+                        <ol class="list-group list-group-numbered list-group-flush">
+                            <li class="list-group-item border-0 px-0 py-1 small">Bölüm Başkanı</li>
+                            <li class="list-group-item border-0 px-0 py-1 small">@(ogrenci.OgrenciTuru == "OnLisans" ? "MYO" : "FAK/YO") Sekreteri</li>
+                            <li class="list-group-item border-0 px-0 py-1 small">Laboratuvar Sorumlusu</li>
+                            <li class="list-group-item border-0 px-0 py-1 small">Staj Komisyonu Başkanı</li>
+                            <li class="list-group-item border-0 px-0 py-1 small">Kütüphane Daire Başkanlığı</li>
+                            <li class="list-group-item border-0 px-0 py-1 small">Sağlık Kültür Spor Daire Başk.</li>
+                            <li class="list-group-item border-0 px-0 py-1 small">Birim Öğrenci İşleri</li>
+                            <li class="list-group-item border-0 px-0 py-1 small">Bilgi İşlem Daire Başkanlığı</li>
+                        </ol>
+                    }
+                    else if (ogrenci?.OgrenciTuru == "YuksekLisans")
+                    {
+                        <ol class="list-group list-group-numbered list-group-flush">
+                            <li class="list-group-item border-0 px-0 py-1 small">Danışman</li>
+                            <li class="list-group-item border-0 px-0 py-1 small">Anabilim Dalı Başkanı</li>
+                            <li class="list-group-item border-0 px-0 py-1 small">Kütüphane Daire Başkanlığı</li>
+                            <li class="list-group-item border-0 px-0 py-1 small">Bilgi İşlem Daire Başkanlığı</li>
+                            <li class="list-group-item border-0 px-0 py-1 small">Sağlık Kültür Spor Daire Başk.</li>
+                            <li class="list-group-item border-0 px-0 py-1 small">Bilimsel Araştırmalar Birimi</li>
+                            <li class="list-group-item border-0 px-0 py-1 small">LEE Öğrenci İşleri</li>
+                            <li class="list-group-item border-0 px-0 py-1 small">Enstitü Müdürü</li>
+                        </ol>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        border-radius: 12px;
+    }
+
+    .card-header {
+        border-radius: 12px 12px 0 0 !important;
+    }
+
+    .btn {
+        border-radius: 8px;
+        font-weight: 500;
+    }
+
+    .form-control, .form-select {
+        border-radius: 8px;
+        border: 1px solid #dee2e6;
+    }
+
+        .form-control:focus, .form-select:focus {
+            border-color: #80bdff;
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+        }
+
+    .upload-area {
+        position: relative;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        border-radius: 10px !important;
+    }
+
+        .upload-area:hover {
+            border-color: #0056b3 !important;
+            background-color: #f8f9ff !important;
+        }
+
+    .upload-default, .upload-selected {
+        pointer-events: none;
+    }
+
+    #dosyaTemizle {
+        pointer-events: auto;
+    }
+
+    .alert {
+        border-radius: 10px;
+        border: none;
+    }
+
+    .badge {
+        font-weight: 500;
+    }
+
+    .list-group-item {
+        font-size: 0.875rem;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const basvuruTuru = document.getElementById('basvuruTuru');
+        const aciklamaDiv = document.getElementById('basvuruAciklama');
+        const belgelerDiv = document.getElementById('gereklibelgeler');
+        const belgeListe = document.getElementById('belgeListe');
+        const aciklamaTextarea = document.getElementById('aciklama');
+        const karakterSayaci = document.getElementById('karakterSayaci');
+        const form = document.getElementById('basvuruForm');
+        const belgeDosyasi = document.getElementById('belgeDosyasi');
+        const uploadDefault = document.getElementById('uploadDefault');
+        const uploadSelected = document.getElementById('uploadSelected');
+        const dosyaAdi = document.getElementById('dosyaAdi');
+        const dosyaBoyutu = document.getElementById('dosyaBoyutu');
+        const dosyaTemizle = document.getElementById('dosyaTemizle');
+
+        // Başvuru türü açıklamaları
+        const basvuruAciklamalari = {
+            "Mezuniyet": "Eğitimi tamamlayarak mezun olma işlemi",
+            "Yatay Geçiş": "Aynı seviyede başka üniversite/bölüme geçiş",
+            "Dikey Geçiş": "Önlisanstan lisans programına geçiş",
+            "Kayıt Dondurma": "Geçici süreliğine eğitime ara verme",
+            "Kayıt Silme": "Üniversite kaydını tamamen silme",
+            "Nakil": "Başka üniversiteye nakil işlemi",
+            "Çekilme": "Kendi isteğiyle üniversiteden ayrılma",
+            "Vefat": "Öğrencinin vefatı durumu",
+            "Askerlik": "Askerlik hizmeti nedeniyle",
+            "Sağlık Raporu": "Sağlık durumu nedeniyle eğitime devam edememe",
+            "Disiplin Cezası": "Disiplin kurulu kararı ile çıkarılma",
+            "Akademik Yetersizlik": "Akademik başarısızlık nedeniyle çıkarılma"
+        };
+
+        // Gerekli belgeler
+        const gereklieBelgeler = {
+            "Vefat": ["Vefat belgesi", "Yakın akraba belgesi"],
+            "Sağlık Raporu": ["Heyet raporu", "Hastane belgesi"],
+            "Askerlik": ["Celp belgesi veya askerlik belgesi"],
+            "Yatay Geçiş": ["Kabul belgesi", "Transkript"],
+            "Dikey Geçiş": ["YKS sonuç belgesi", "Diploma fotokopisi"]
+        };
+
+        // Başvuru türü değişimi
+        basvuruTuru.addEventListener('change', function() {
+            const secilenTur = this.value;
+            if (secilenTur && basvuruAciklamalari[secilenTur]) {
+                aciklamaDiv.textContent = basvuruAciklamalari[secilenTur];
+                aciklamaDiv.className = 'form-text text-info';
+
+                if (gereklieBelgeler[secilenTur]) {
+                    belgeListe.innerHTML = '';
+                    gereklieBelgeler[secilenTur].forEach(belge => {
+                        const li = document.createElement('li');
+                        li.textContent = belge;
+                        belgeListe.appendChild(li);
+                    });
+                    belgelerDiv.style.display = 'block';
+                } else {
+                    belgelerDiv.style.display = 'none';
+                }
+            } else {
+                aciklamaDiv.textContent = 'İlişik kesme nedeninizi seçiniz';
+                aciklamaDiv.className = 'form-text';
+                belgelerDiv.style.display = 'none';
+            }
+        });
+
+        // Karakter sayacı
+        aciklamaTextarea.addEventListener('input', function() {
+            const uzunluk = this.value.length;
+            karakterSayaci.textContent = `${uzunluk} / 1000`;
+            karakterSayaci.className = uzunluk < 20 ? 'text-danger' : 'text-muted';
+        });
+
+        // Dosya yükleme
+        belgeDosyasi.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                dosyaAdi.textContent = file.name;
+                dosyaBoyutu.textContent = formatFileSize(file.size);
+                uploadDefault.classList.add('d-none');
+                uploadSelected.classList.remove('d-none');
+            }
+        });
+
+        dosyaTemizle.addEventListener('click', function() {
+            belgeDosyasi.value = '';
+            uploadSelected.classList.add('d-none');
+            uploadDefault.classList.remove('d-none');
+        });
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        // Form validasyonu
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const basvuruTuruValue = basvuruTuru.value;
+            const aciklamaValue = aciklamaTextarea.value.trim();
+            const onayCheckbox = document.getElementById('onayCheckbox');
+
+            if (!basvuruTuruValue) {
+                basvuruTuru.focus();
+                return;
+            }
+
+            if (aciklamaValue.length < 20) {
+                aciklamaTextarea.focus();
+                return;
+            }
+
+            if (!onayCheckbox.checked) {
+                alert('Beyan ve onay kutusunu işaretlemelisiniz.');
+                return;
+            }
+
+            if (belgeDosyasi.files.length > 0 && belgeDosyasi.files[0].size > 5 * 1024 * 1024) {
+                alert('Dosya boyutu 5MB\'dan büyük olamaz.');
+                return;
+            }
+
+            if (confirm('Başvurunuzu göndermek istediğinizden emin misiniz? Bu işlem geri alınamaz.')) {
+                document.getElementById('submitBtn').innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Gönderiliyor...';
+                document.getElementById('submitBtn').disabled = true;
+                this.submit();
+            }
+        });
+    });
+</script>

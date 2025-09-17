@@ -1,0 +1,265 @@
+﻿@using HayataAtilmaFormu.Helpers
+@{
+    ViewData["Title"] = Html.T("LoginTitle");
+}
+
+<!-- Basit Dil Seçici -->
+<div class="language-selector">
+    <button class="btn btn-sm btn-outline-secondary" onclick="toggleLanguage()">
+        <span id="langFlag">🇹🇷</span>
+        <span id="langText">TR</span>
+    </button>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header text-center bg-primary text-white">
+                <h4 class="mb-0">
+                    <i class="fas fa-sign-in-alt me-2"></i>
+                    @Html.T("SystemLogin")
+                </h4>
+            </div>
+            <div class="card-body p-4">
+                @if (!string.IsNullOrEmpty(ViewBag.Error))
+                {
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        @ViewBag.Error
+                    </div>
+                }
+
+                @if (!string.IsNullOrEmpty(ViewBag.Success))
+                {
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle me-2"></i>
+                        @ViewBag.Success
+                    </div>
+                }
+
+                <form method="post">
+                    @Html.AntiForgeryToken()
+
+                    <div class="mb-3">
+                        <label for="kullaniciAdi" class="form-label">
+                            <i class="fas fa-user me-2"></i>@Html.T("StudentNoOrEmail")
+                        </label>
+                        <input type="text"
+                               class="form-control"
+                               id="kullaniciAdi"
+                               name="kullaniciAdi"
+                               placeholder="@Html.T("StudentNoOrEmailPlaceholder")"
+                               required />
+                        <div class="form-text">
+                            <small>
+                                <strong>@Html.T("Students"):</strong> @Html.T("EnterStudentNo")<br>
+                                <strong>@Html.T("Authorities"):</strong> @Html.T("EnterEmailAddress")
+                            </small>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="sifre" class="form-label">
+                            <i class="fas fa-lock me-2"></i>@Html.T("Password")
+                        </label>
+                        <div class="input-group">
+                            <input type="password"
+                                   class="form-control"
+                                   id="sifre"
+                                   name="sifre"
+                                   placeholder="@Html.T("EnterPassword")"
+                                   required />
+                            <button class="btn btn-outline-secondary"
+                                    type="button"
+                                    onclick="togglePassword()">
+                                <i class="fas fa-eye" id="toggleIcon"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg" id="loginBtn">
+                            <i class="fas fa-sign-in-alt me-2"></i>
+                            @Html.T("LoginButton")
+                        </button>
+                    </div>
+                </form>
+
+                <hr class="my-4">
+
+                <div class="text-center">
+                    <p class="mb-3">@Html.T("NoAccountYet")</p>
+
+                    <!-- Kayıt Butonları -->
+                    <div class="row">
+                        <div class="col-md-6 mb-2">
+                            <a href="@Url.Action("Register", "Account")" class="btn btn-outline-success w-100">
+                                <i class="fas fa-graduation-cap me-2"></i>
+                                @Html.T("StudentRegistration")
+                            </a>
+                        </div>
+                        <div class="col-md-6 mb-2">
+                            <a href="@Url.Action("YetkiliRegister", "Account")" class="btn btn-outline-info w-100">
+                                <i class="fas fa-user-tie me-2"></i>
+                                @Html.T("AuthorityRegistration")
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Şifre Unuttum Linki -->
+        <div class="text-center mt-3">
+            <a href="@Url.Action("Index", "PasswordReset")" class="text-decoration-none text-muted">
+                <i class="fas fa-key me-2"></i>@Html.T("ForgotPassword")
+            </a>
+        </div>
+
+        <!-- Bilgi Kartları -->
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <div class="card bg-light">
+                    <div class="card-body text-center">
+                        <i class="fas fa-graduation-cap fa-2x text-success mb-2"></i>
+                        <h6>@Html.T("Students")</h6>
+                        <small class="text-muted">
+                            @Html.T("LoginWithStudentNo")
+                        </small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card bg-light">
+                    <div class="card-body text-center">
+                        <i class="fas fa-user-tie fa-2x text-info mb-2"></i>
+                        <h6>@Html.T("Authorities")</h6>
+                        <small class="text-muted">
+                            @Html.T("LoginWithEmail")
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let currentLang = 'tr'; // Varsayılan
+
+        // Sayfa yüklendiğinde mevcut dili al
+        document.addEventListener('DOMContentLoaded', function() {
+            fetch('/Language/GetCurrentLanguage')
+                .then(response => response.json())
+                .then(data => {
+                    currentLang = data.lang;
+                    updateLanguageButton();
+                })
+                .catch(() => {
+                    currentLang = 'tr';
+                    updateLanguageButton();
+                });
+        });
+
+        function updateLanguageButton() {
+            const flagSpan = document.getElementById('langFlag');
+            const textSpan = document.getElementById('langText');
+
+            if (currentLang === 'en') {
+                flagSpan.textContent = '🇺🇸';
+                textSpan.textContent = 'EN';
+            } else {
+                flagSpan.textContent = '🇹🇷';
+                textSpan.textContent = 'TR';
+            }
+        }
+
+        function toggleLanguage() {
+            const newLang = currentLang === 'tr' ? 'en' : 'tr';
+
+            // Loading göster
+            const btn = document.querySelector('.language-selector button');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            btn.disabled = true;
+
+            // Form oluştur ve gönder
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/Language/SetLanguage';
+            form.style.display = 'none';
+
+            // Parametreler
+            const langInput = document.createElement('input');
+            langInput.type = 'hidden';
+            langInput.name = 'lang';
+            langInput.value = newLang;
+
+            const returnUrlInput = document.createElement('input');
+            returnUrlInput.type = 'hidden';
+            returnUrlInput.name = 'returnUrl';
+            returnUrlInput.value = window.location.href;
+
+            // Token
+            const token = document.querySelector('input[name="__RequestVerificationToken"]');
+            if (token) {
+                const tokenInput = document.createElement('input');
+                tokenInput.type = 'hidden';
+                tokenInput.name = '__RequestVerificationToken';
+                tokenInput.value = token.value;
+                form.appendChild(tokenInput);
+            }
+
+            form.appendChild(langInput);
+            form.appendChild(returnUrlInput);
+            document.body.appendChild(form);
+            form.submit();
+        }
+
+        function togglePassword() {
+            const passwordInput = document.getElementById('sifre');
+            const toggleIcon = document.getElementById('toggleIcon');
+
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleIcon.classList.remove('fa-eye');
+                toggleIcon.classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                toggleIcon.classList.remove('fa-eye-slash');
+                toggleIcon.classList.add('fa-eye');
+            }
+        }
+
+        // Form submission ile loading state
+        document.querySelector('form').addEventListener('submit', function(e) {
+            const submitBtn = document.getElementById('loginBtn');
+            const loggingText = currentLang === 'en' ? 'Logging in...' : 'Giriş yapılıyor...';
+            submitBtn.innerHTML = `<i class="fas fa-spinner fa-spin me-2"></i>${loggingText}`;
+            submitBtn.disabled = true;
+        });
+    </script>
+}
+
+<style>
+    .language-selector {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 1050;
+    }
+
+        .language-selector button {
+            border-radius: 20px;
+            padding: 8px 15px;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+            .language-selector button:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+            }
+</style>

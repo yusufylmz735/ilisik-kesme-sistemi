@@ -1,0 +1,325 @@
+﻿@model HayataAtilmaFormu.Models.Yetkili
+@{
+    ViewData["Title"] = "Yetkili Kayıt";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="card-title mb-0">
+                        <i class="fas fa-user-tie"></i> Yetkili Kayıt Formu
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Bilgi:</strong> Kayıt işleminiz tamamlandıktan sonra SuperAdmin onayı beklemeniz gerekmektedir.
+                        Onay alındıktan sonra sisteme giriş yapabileceksiniz.
+                    </div>
+
+                    @if (ViewBag.Success != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show">
+                            <i class="fas fa-check-circle"></i> @ViewBag.Success
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
+                    @if (ViewBag.Error != null)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show">
+                            <i class="fas fa-exclamation-triangle"></i> @ViewBag.Error
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
+                    @if (ViewBag.Warning != null)
+                    {
+                        <div class="alert alert-warning alert-dismissible fade show">
+                            <i class="fas fa-exclamation-triangle"></i> @ViewBag.Warning
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
+                    <form asp-action="YetkiliRegister" method="post" id="yetkiliForm">
+                        @Html.AntiForgeryToken()
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="AdSoyad" class="form-label">
+                                        <i class="fas fa-user"></i> Ad Soyad <span class="text-danger">*</span>
+                                    </label>
+                                    <input asp-for="AdSoyad" class="form-control" placeholder="Adınızı ve soyadınızı girin" required />
+                                    <span asp-validation-for="AdSoyad" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="Email" class="form-label">
+                                        <i class="fas fa-envelope"></i> E-posta Adresi <span class="text-danger">*</span>
+                                    </label>
+                                    <input asp-for="Email" type="email" class="form-control" placeholder="ornek@sirnak.edu.tr" required />
+                                    <span asp-validation-for="Email" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="Sifre" class="form-label">
+                                        <i class="fas fa-lock"></i> Şifre <span class="text-danger">*</span>
+                                    </label>
+                                    <input asp-for="Sifre" type="password" class="form-control" id="Sifre" placeholder="Şifrenizi girin" required />
+                                    <span asp-validation-for="Sifre" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="sifreTekrar" class="form-label">
+                                        <i class="fas fa-lock"></i> Şifre Tekrar <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="password" name="sifreTekrar" class="form-control" id="sifreTekrar" placeholder="Şifrenizi tekrar girin" required />
+                                    <span id="sifreTekrarError" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label asp-for="OnayAsamasi" class="form-label">
+                                <i class="fas fa-check-circle"></i> Onay Aşaması <span class="text-danger">*</span>
+                            </label>
+                            <select asp-for="OnayAsamasi" id="OnayAsamasi" class="form-select" required>
+                                <option value="">Onay aşaması seçiniz...</option>
+                                @foreach (var item in ViewBag.OnayAsamalari)
+                                {
+                                    <option value="@item.Value">@item.Text</option>
+                                }
+                            </select>
+                            <span asp-validation-for="OnayAsamasi" class="text-danger"></span>
+                        </div>
+
+                        <div class="row" id="fakulteRow">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="fakulteSelect" class="form-label">
+                                        <i class="fas fa-university"></i> Fakülte/Enstitü <span class="text-danger">*</span>
+                                    </label>
+                                    <select id="fakulteSelect" name="FakulteId" class="form-select" required>
+                                        <option value="">Fakülte/Enstitü seçiniz...</option>
+                                        @foreach (var fakulte in ViewBag.Fakulteler)
+                                        {
+                                            <option value="@fakulte.Id">@fakulte.FakulteAdi</option>
+                                        }
+                                    </select>
+                                    <span asp-validation-for="FakulteId" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="bolumSelect" class="form-label" id="bolumLabel">
+                                        <i class="fas fa-graduation-cap"></i> Bölüm (İsteğe bağlı)
+                                    </label>
+                                    <select id="bolumSelect" name="BolumId" class="form-select" disabled>
+                                        <option value="">Önce fakülte seçiniz...</option>
+                                    </select>
+                                    <span asp-validation-for="BolumId" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="Pozisyon" class="form-label">
+                                <i class="fas fa-briefcase"></i> Pozisyon <span class="text-danger">*</span>
+                            </label>
+                            <select asp-for="Pozisyon" class="form-select" required>
+                                <option value="">Pozisyon seçiniz...</option>
+                                @foreach (var item in ViewBag.OnayAsamalari)
+                                {
+                                    <option value="@item.Value">@item.Text</option>
+                                }
+                            </select>
+                            <span asp-validation-for="Pozisyon" class="text-danger"></span>
+                        </div>
+
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="@Url.Action("Login", "Account")" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left"></i> Giriş Sayfasına Dön
+                            </a>
+                            <button type="submit" class="btn btn-primary" id="submitBtn">
+                                <i class="fas fa-save"></i> Kayıt Ol
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+                $(document).ready(function () {
+            // Onay aşaması değiştiğinde fakülte/bölüm alanlarını kontrol et
+            $('#OnayAsamasi').on('change', function () {
+                var selectedOnayAsamasi = $(this).val();
+
+                if (selectedOnayAsamasi) {
+                    // AJAX ile onay aşaması bilgilerini al
+                    $.ajax({
+                        url: '@Url.Action("GetOnayAsamasiDetay", "Account")',
+                        type: 'GET',
+                        data: { onayAsamasi: selectedOnayAsamasi },
+                        success: function (data) {
+                            if (data.success) {
+                                toggleFakulteBolumFields(data.onayAsama);
+                            } else {
+                                console.error('Onay aşaması bilgisi alınamadı:', data.message);
+                                // Hata durumunda alanları göster
+                                showFakulteBolumFields();
+                            }
+                        },
+                        error: function (xhr, status, error) {
+                            console.error('Onay aşaması kontrolü hatası:', error);
+                            // Hata durumunda alanları göster
+                            showFakulteBolumFields();
+                        }
+                    });
+                } else {
+                    // Onay aşaması seçilmemişse alanları göster
+                    showFakulteBolumFields();
+                    resetFakulteBolumSelections();
+                }
+            });
+
+            // Fakülte seçimi değiştiğinde bölümleri yükle
+            $('#fakulteSelect').on('change', function () {
+                var fakulteId = $(this).val();
+                var bolumSelect = $('#bolumSelect');
+
+                if (fakulteId) {
+                    bolumSelect.prop('disabled', true);
+                    bolumSelect.html('<option value="">Yükleniyor...</option>');
+
+                    $.ajax({
+                        url: '@Url.Action("GetBolumler", "Account")',
+                        type: 'GET',
+                        data: { fakulteId: fakulteId },
+                        success: function (data) {
+                            if (data && data.length > 0) {
+                                bolumSelect.html('<option value="">Bölüm seçiniz (isteğe bağlı)</option>');
+                                $.each(data, function (index, bolum) {
+                                    bolumSelect.append(`<option value="${bolum.id}">${bolum.bolumAdi}</option>`);
+                                });
+                                bolumSelect.prop('disabled', false);
+                            } else {
+                                bolumSelect.html('<option value="">Bu fakülte için bölüm bulunamadı</option>');
+                                bolumSelect.prop('disabled', true);
+                            }
+                        },
+                        error: function (xhr, status, error) {
+                            console.error('Bölüm yükleme hatası:', xhr.status, error);
+                            bolumSelect.html('<option value="">Bölüm yüklenirken hata oluştu</option>');
+                            bolumSelect.prop('disabled', true);
+                            alert('Bölümler yüklenirken bir hata oluştu. Lütfen tekrar deneyin.');
+                        }
+                    });
+                } else {
+                    bolumSelect.html('<option value="">Önce fakülte seçiniz...</option>');
+                    bolumSelect.prop('disabled', true);
+                }
+            });
+
+            // Şifre eşleşme kontrolü
+            $('#sifreTekrar').on('keyup', function () {
+                var sifre = $('#Sifre').val();
+                var sifreTekrar = $(this).val();
+
+                if (sifreTekrar.length > 0) {
+                    if (sifre !== sifreTekrar) {
+                        $(this).removeClass('is-valid').addClass('is-invalid');
+                        $('#sifreTekrarError').text('Şifreler eşleşmiyor!');
+                    } else {
+                        $(this).removeClass('is-invalid').addClass('is-valid');
+                        $('#sifreTekrarError').text('');
+                    }
+                }
+            });
+
+            // Form validasyonu
+            $('#yetkiliForm').on('submit', function (e) {
+                var sifre = $('#Sifre').val();
+                var sifreTekrar = $('#sifreTekrar').val();
+                var onayAsamasi = $('#OnayAsamasi').val();
+
+                if (sifre !== sifreTekrar) {
+                    e.preventDefault();
+                    alert('Şifreler eşleşmiyor!');
+                    return false;
+                }
+
+                if (!onayAsamasi) {
+                    e.preventDefault();
+                    alert('Lütfen onay aşaması seçiniz!');
+                    return false;
+                }
+
+                // Fakülte kontrolü sadece görünür durumdaysa yapılsın
+                if ($('#fakulteRow').is(':visible')) {
+                    var fakulteId = $('#fakulteSelect').val();
+                    if (!fakulteId) {
+                        e.preventDefault();
+                        alert('Lütfen fakülte seçiniz!');
+                        return false;
+                    }
+                }
+
+                $('#submitBtn').html('<i class="fas fa-spinner fa-spin me-2"></i>Kayıt yapılıyor...');
+                $('#submitBtn').prop('disabled', true);
+            });
+
+            // Onay aşaması bilgilerine göre fakülte/bölüm alanlarını kontrol et
+            function toggleFakulteBolumFields(onayAsama) {
+                if (onayAsama.ortak) {
+                    // Ortak pozisyon ise fakülte ve bölüm alanlarını gizle
+                    hideFakulteBolumFields();
+                    resetFakulteBolumSelections();
+                } else {
+                    // Ortak değilse alanları göster
+                    showFakulteBolumFields();
+
+                    // Bölüm bazlı ise bölüm alanını zorunlu yap
+                    if (onayAsama.bolumBazli) {
+                        $('#bolumSelect').attr('required', true);
+                        $('#bolumLabel').html('<i class="fas fa-graduation-cap"></i> Bölüm <span class="text-danger">*</span>');
+                    } else {
+                        $('#bolumSelect').removeAttr('required');
+                        $('#bolumLabel').html('<i class="fas fa-graduation-cap"></i> Bölüm (İsteğe bağlı)');
+                    }
+                }
+            }
+
+            // Fakülte ve bölüm alanlarını gizle
+            function hideFakulteBolumFields() {
+                $('#fakulteRow').hide();
+                $('#fakulteSelect').removeAttr('required');
+                $('#bolumSelect').removeAttr('required');
+            }
+
+            // Fakülte ve bölüm alanlarını göster
+            function showFakulteBolumFields() {
+                $('#fakulteRow').show();
+                $('#fakulteSelect').attr('required', true);
+            }
+
+            // Fakülte ve bölüm seçimlerini sıfırla
+            function resetFakulteBolumSelections() {
+                $('#fakulteSelect').val('').trigger('change');
+                $('#bolumSelect').val('').html('<option value="">Önce fakülte seçiniz...</option>').prop('disabled', true);
+            }
+        });
+    </script>
+}

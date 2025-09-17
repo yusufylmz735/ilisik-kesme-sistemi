@@ -1,0 +1,246 @@
+﻿@{
+    ViewData["Title"] = "Yetkili Anasayfa";
+    var yetkili = ViewBag.Yetkili as HayataAtilmaFormu.Models.Yetkili;
+    var bekleyenBasvurular = ViewBag.BekleyenBasvurular as List<HayataAtilmaFormu.Models.OnayDetay>;
+    var stats = ViewBag.Stats;
+}
+
+<div class="container-fluid">
+    <!-- Başlık ve Hoşgeldiniz -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="text-primary mb-1">Anasayfa</h2>
+                    <p class="text-muted mb-0">
+                        Hoşgeldiniz, <strong>@yetkili?.AdSoyad</strong>
+                        • @yetkili?.Pozisyon • @yetkili?.Fakulte?.FakulteAdi
+                    </p>
+                </div>
+                <div class="text-end">
+                    <small class="text-muted">Son giriş: @DateTime.Now.ToString("dd.MM.yyyy HH:mm")</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- İstatistik Kartları -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card bg-warning bg-opacity-10 border-warning h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h3 class="text-warning mb-1">@(stats?.BekleyenBasvuru ?? 0)</h3>
+                            <p class="card-text text-muted mb-0">Bekleyen İşlem</p>
+                        </div>
+                        <div class="text-warning">
+                            <i class="fas fa-clock fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card bg-success bg-opacity-10 border-success h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h3 class="text-success mb-1">@(stats?.OnaylananBasvuru ?? 0)</h3>
+                            <p class="card-text text-muted mb-0">Onayladığım</p>
+                        </div>
+                        <div class="text-success">
+                            <i class="fas fa-check-circle fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card bg-danger bg-opacity-10 border-danger h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h3 class="text-danger mb-1">@(stats?.ReddettigimBasvuru ?? 0)</h3>
+                            <p class="card-text text-muted mb-0">Reddettiğim</p>
+                        </div>
+                        <div class="text-danger">
+                            <i class="fas fa-times-circle fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card bg-info bg-opacity-10 border-info h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h3 class="text-info mb-1">@(stats?.ToplamBasvuru ?? 0)</h3>
+                            <p class="card-text text-muted mb-0">Toplam İşlem</p>
+                        </div>
+                        <div class="text-info">
+                            <i class="fas fa-chart-line fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hızlı İşlemler -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-tachometer-alt me-2"></i>
+                        Hızlı İşlemler
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 mb-2">
+                            <a href="@Url.Action("Basvurular", "Yetkili", new { durum = "Beklemede" })"
+                               class="btn btn-outline-warning w-100">
+                                <i class="fas fa-clock me-2"></i>Bekleyen İşlemler
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <a href="@Url.Action("Basvurular", "Yetkili")"
+                               class="btn btn-outline-primary w-100">
+                                <i class="fas fa-list me-2"></i>Tüm Başvurular
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <a href="@Url.Action("Istatistikler", "Yetkili")"
+                               class="btn btn-outline-info w-100">
+                                <i class="fas fa-chart-bar me-2"></i>Detaylı Raporlar
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <a href="@Url.Action("Basvurular", "Yetkili", new { durum = "Onaylandi" })"
+                               class="btn btn-outline-success w-100">
+                                <i class="fas fa-history me-2"></i>İşlem Geçmişi
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bekleyen Başvurular -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-warning text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            Onay Bekleyen Başvurular (@yetkili?.OnayAsamasi)
+                        </h5>
+                        @if (bekleyenBasvurular?.Count > 10)
+                        {
+                            <small>İlk 10 tanesi gösteriliyor</small>
+                        }
+                    </div>
+                </div>
+                <div class="card-body">
+                    @if (bekleyenBasvurular?.Any() == true)
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Öğrenci</th>
+                                        <th>Bölüm</th>
+                                        <th>Başvuru Türü</th>
+                                        <th>Başvuru Tarihi</th>
+                                        <th>Beklemede</th>
+                                        <th>İşlem</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in bekleyenBasvurular.Take(10))
+                                    {
+                                        var beklemeSuresi = (DateTime.Now - item.Basvuru.BasvuruTarihi).Days;
+                                        <tr>
+                                            <td>
+                                                <div>
+                                                    <strong>@item.Basvuru.Ogrenci.TamAd</strong>
+                                                    <br><small class="text-muted">@item.Basvuru.Ogrenci.OgrenciNo</small>
+                                                </div>
+                                            </td>
+                                            <td>@item.Basvuru.Ogrenci.Bolum.BolumAdi</td>
+                                            <td>
+                                                <span class="badge bg-primary">@item.Basvuru.BasvuruTuru</span>
+                                            </td>
+                                            <td>@item.Basvuru.BasvuruTarihi.ToString("dd.MM.yyyy")</td>
+                                            <td>
+                                                <span class="badge @(beklemeSuresi > 5 ? "bg-danger" : beklemeSuresi > 2 ? "bg-warning" : "bg-success")">
+                                                    @beklemeSuresi gün
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <div class="btn-group btn-group-sm">
+                                                    <a href="@Url.Action("BasvuruDetay", "Yetkili", new { id = item.Basvuru.Id })"
+                                                       class="btn btn-outline-primary btn-sm">
+                                                        <i class="fas fa-eye"></i> Detay
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+
+                        @if (bekleyenBasvurular.Count > 10)
+                        {
+                            <div class="text-center mt-3">
+                                <a href="@Url.Action("Basvurular", "Yetkili", new { durum = "Beklemede" })"
+                                   class="btn btn-outline-primary">
+                                    Tümünü Gör (@bekleyenBasvurular.Count)
+                                </a>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="text-center py-4">
+                            <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">Bekleyen başvuru bulunmuyor</h5>
+                            <p class="text-muted">Şu anda onayınızı bekleyen başvuru bulunmamaktadır.</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        border-radius: 10px;
+        border: 1px solid #e3e6f0;
+        box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+    }
+
+    .table th {
+        border-top: none;
+        font-weight: 600;
+        color: #5a5c69;
+    }
+
+    .badge {
+        font-size: 0.75rem;
+    }
+
+    .btn-group-sm > .btn, .btn-sm {
+        font-size: 0.8rem;
+    }
+</style>

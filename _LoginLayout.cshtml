@@ -1,0 +1,261 @@
+﻿<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Şırnak Üniversitesi İlişik Kesme Sistemi</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="~/favicon.ico" />
+
+    <!-- Meta Tags -->
+    <meta name="description" content="Şırnak Üniversitesi İlişik Kesme Otomasyon Sistemi">
+    <meta name="keywords" content="şırnak üniversitesi, ilişik kesme, otomasyon, öğrenci işleri">
+    <meta name="author" content="Şırnak Üniversitesi">
+
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #34495e;
+            --accent-color: #667eea;
+            --success-color: #27ae60;
+            --danger-color: #e74c3c;
+            --warning-color: #f39c12;
+            --info-color: #3498db;
+            --light-color: #ecf0f1;
+            --dark-color: #2c3e50;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--accent-color);
+            border-radius: 4px;
+        }
+
+            ::-webkit-scrollbar-thumb:hover {
+                background: #5a67d8;
+            }
+
+        /* Alert customizations */
+        .alert {
+            border-radius: 10px;
+            border: none;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .alert-danger {
+            background-color: #fff5f5;
+            color: #c53030;
+            border-left: 4px solid #e74c3c;
+        }
+
+        .alert-info {
+            background-color: #f0f9ff;
+            color: #2b77c9;
+            border-left: 4px solid #3498db;
+        }
+
+        .alert-success {
+            background-color: #f0fff4;
+            color: #22543d;
+            border-left: 4px solid #27ae60;
+        }
+
+        .alert-warning {
+            background-color: #fffdf0;
+            color: #975a16;
+            border-left: 4px solid #f39c12;
+        }
+
+        /* Form validations */
+        .form-control.is-invalid {
+            border-color: var(--danger-color);
+            box-shadow: 0 0 0 0.2rem rgba(231, 76, 60, 0.25);
+        }
+
+        .form-control.is-valid {
+            border-color: var(--success-color);
+            box-shadow: 0 0 0 0.2rem rgba(39, 174, 96, 0.25);
+        }
+
+        /* Loading spinner */
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        /* Utility classes */
+        .text-shadow {
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+        }
+
+        .box-shadow {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .box-shadow-lg {
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+    </style>
+
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body>
+    @RenderBody()
+
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- jQuery (if needed) -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+    <!-- Common Scripts -->
+    <script>
+        // CSRF Token Setup for AJAX
+        const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+        if (token) {
+            $.ajaxSetup({
+                beforeSend: function(xhr) {
+                    xhr.setRequestHeader('RequestVerificationToken', token);
+                }
+            });
+        }
+
+        // Auto-hide alerts after 5 seconds
+        document.addEventListener('DOMContentLoaded', function() {
+            const alerts = document.querySelectorAll('.alert:not(.alert-permanent)');
+            alerts.forEach(function(alert) {
+                setTimeout(function() {
+                    const bsAlert = new bootstrap.Alert(alert);
+                    bsAlert.close();
+                }, 5000);
+            });
+        });
+
+        // Loading button functionality
+        function setLoadingState(button, isLoading = true) {
+            if (isLoading) {
+                button.disabled = true;
+                const originalText = button.innerHTML;
+                button.dataset.originalText = originalText;
+                button.innerHTML = '<span class="spinner me-2"></span>Yükleniyor...';
+            } else {
+                button.disabled = false;
+                button.innerHTML = button.dataset.originalText || 'Gönder';
+            }
+        }
+
+        // Form submission with loading state
+        document.addEventListener('DOMContentLoaded', function() {
+            const forms = document.querySelectorAll('form');
+            forms.forEach(function(form) {
+                form.addEventListener('submit', function() {
+                    const submitButton = form.querySelector('button[type="submit"]');
+                    if (submitButton) {
+                        setLoadingState(submitButton, true);
+                    }
+                });
+            });
+        });
+
+        // Network connectivity check
+        function checkNetworkStatus() {
+            if (!navigator.onLine) {
+                const alertHtml = `
+                    <div class="alert alert-warning alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3" style="z-index: 9999;">
+                        <i class="bi bi-wifi-off"></i>
+                        <strong>Bağlantı Sorunu!</strong> İnternet bağlantınızı kontrol ediniz.
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                `;
+                document.body.insertAdjacentHTML('afterbegin', alertHtml);
+            }
+        }
+
+        // Check network status on page load and when online/offline events occur
+        window.addEventListener('load', checkNetworkStatus);
+        window.addEventListener('offline', checkNetworkStatus);
+        window.addEventListener('online', function() {
+            const networkAlerts = document.querySelectorAll('.alert:has(.bi-wifi-off)');
+            networkAlerts.forEach(alert => {
+                const bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
+            });
+        });
+
+        // Console warning for developers
+        console.log('%c🔒 Şırnak Üniversitesi İlişik Kesme Sistemi',
+            'color: #2c3e50; font-size: 16px; font-weight: bold;');
+        console.log('%cBu sistem sadece yetkili personel tarafından kullanılmalıdır.',
+            'color: #e74c3c; font-size: 12px;');
+    </script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+
+    <!-- Environment-specific scripts -->
+    @if (Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development")
+    {
+        <script>
+            console.log('%c🔧 Development Mode Aktif', 'color: #f39c12; font-size: 14px; font-weight: bold;');
+
+            // Development mode utilities
+            window.dev = {
+                clearStorage: () => {
+                    localStorage.clear();
+                    sessionStorage.clear();
+                    console.log('Storage cleared');
+                },
+                testUser: {
+                    student: { username: '202001001', password: '123456' },
+                    authority: { username: 'yetkili@sirnak.edu.tr', password: '123456' },
+                    admin: { username: 'admin@sirnak.edu.tr', password: 'admin123' }
+                },
+                fillLoginForm: (userType) => {
+                    const testUsers = window.dev.testUser;
+                    const user = testUsers[userType];
+                    if (user) {
+                        document.querySelector('input[name="Username"]').value = user.username;
+                        document.querySelector('input[name="Password"]').value = user.password;
+                        console.log(`${userType} kullanıcısı form alanlarına dolduruldu`);
+                    }
+                }
+            };
+        </script>
+    }
+</body>
+</html>

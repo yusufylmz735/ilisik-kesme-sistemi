@@ -1,0 +1,285 @@
+﻿@model HayataAtilmaFormu.Models.Ogrenci
+
+@{
+    ViewData["Title"] = "Kayıt Ol";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header text-center bg-success text-white">
+                <h4 class="mb-0">
+                    <i class="fas fa-user-plus me-2"></i>
+                    Öğrenci Kaydı
+                </h4>
+            </div>
+            <div class="card-body p-4">
+                @if (!string.IsNullOrEmpty(ViewBag.Error))
+                {
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        @ViewBag.Error
+                    </div>
+                }
+
+                @if (!string.IsNullOrEmpty(ViewBag.Success))
+                {
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle me-2"></i>
+                        @ViewBag.Success
+                    </div>
+                }
+
+                <form method="post">
+                    @Html.AntiForgeryToken()
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label asp-for="OgrenciNo" class="form-label">
+                                    <i class="fas fa-id-card me-2"></i>Öğrenci Numarası
+                                </label>
+                                <input asp-for="OgrenciNo"
+                                       class="form-control"
+                                       placeholder="Ör: 2021123456"
+                                       required />
+                                <span asp-validation-for="OgrenciNo" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label asp-for="Email" class="form-label">
+                                    <i class="fas fa-envelope me-2"></i>E-posta Adresi
+                                </label>
+                                <input asp-for="Email"
+                                       type="email"
+                                       class="form-control"
+                                       placeholder="ornek@ogrenci.sirnak.edu.tr"
+                                       required />
+                                <span asp-validation-for="Email" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label asp-for="Ad" class="form-label">
+                                    <i class="fas fa-user me-2"></i>Adınız
+                                </label>
+                                <input asp-for="Ad"
+                                       class="form-control"
+                                       placeholder="Adınız"
+                                       required />
+                                <span asp-validation-for="Ad" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label asp-for="Soyad" class="form-label">
+                                    <i class="fas fa-user me-2"></i>Soyadınız
+                                </label>
+                                <input asp-for="Soyad"
+                                       class="form-control"
+                                       placeholder="Soyadınız"
+                                       required />
+                                <span asp-validation-for="Soyad" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label asp-for="FakulteId" class="form-label">
+                                    <i class="fas fa-university me-2"></i>Fakülte/Yüksekokul/MYO
+                                </label>
+                                <select asp-for="FakulteId"
+                                        class="form-select"
+                                        id="fakulteSelect"
+                                        onchange="loadBolumler()"
+                                        required>
+                                    <option value="">Fakülte seçiniz...</option>
+                                    @if (ViewBag.Fakulteler != null)
+                                    {
+                                        @foreach (var fakulte in ViewBag.Fakulteler)
+                                        {
+                                            <option value="@fakulte.Id">@fakulte.FakulteAdi</option>
+                                        }
+                                    }
+                                </select>
+                                <span asp-validation-for="FakulteId" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label asp-for="BolumId" class="form-label">
+                                    <i class="fas fa-graduation-cap me-2"></i>Bölüm/Program
+                                </label>
+                                <select asp-for="BolumId"
+                                        class="form-select"
+                                        id="bolumSelect"
+                                        required>
+                                    <option value="">Önce fakülte seçiniz...</option>
+                                </select>
+                                <span asp-validation-for="BolumId" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label asp-for="Telefon" class="form-label">
+                                    <i class="fas fa-phone me-2"></i>Telefon (İsteğe bağlı)
+                                </label>
+                                <input asp-for="Telefon"
+                                       type="tel"
+                                       class="form-control"
+                                       placeholder="0555 123 45 67" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label asp-for="Sifre" class="form-label">
+                                    <i class="fas fa-lock me-2"></i>Şifre
+                                </label>
+                                <div class="input-group">
+                                    <input asp-for="Sifre"
+                                           type="password"
+                                           class="form-control"
+                                           id="sifre"
+                                           placeholder="En az 6 karakter"
+                                           minlength="6"
+                                           required />
+                                    <button class="btn btn-outline-secondary"
+                                            type="button"
+                                            onclick="togglePassword('sifre')">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                                <span asp-validation-for="Sifre" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="sifreTekrar" class="form-label">
+                                    <i class="fas fa-lock me-2"></i>Şifre Tekrarı
+                                </label>
+                                <div class="input-group">
+                                    <input type="password"
+                                           class="form-control"
+                                           id="sifreTekrar"
+                                           name="sifreTekrar"
+                                           placeholder="Şifrenizi tekrar girin"
+                                           minlength="6"
+                                           required />
+                                    <button class="btn btn-outline-secondary"
+                                            type="button"
+                                            onclick="togglePassword('sifreTekrar')">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-success btn-lg">
+                            <i class="fas fa-user-plus me-2"></i>
+                            Kayıt Ol
+                        </button>
+                    </div>
+                </form>
+
+                <hr class="my-4">
+
+                <div class="text-center">
+                    <p class="mb-2">Zaten hesabınız var mı?</p>
+                    <a href="@Url.Action("Login", "Account")" class="btn btn-outline-primary">
+                        <i class="fas fa-sign-in-alt me-2"></i>
+                        Giriş Yap
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function togglePassword(inputId) {
+            const passwordInput = document.getElementById(inputId);
+            const toggleButton = passwordInput.nextElementSibling.querySelector('i');
+
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleButton.classList.remove('fa-eye');
+                toggleButton.classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                toggleButton.classList.remove('fa-eye-slash');
+                toggleButton.classList.add('fa-eye');
+            }
+        }
+
+        function loadBolumler() {
+            const fakulteId = document.getElementById('fakulteSelect').value;
+            const bolumSelect = document.getElementById('bolumSelect');
+
+            if (!fakulteId) {
+                bolumSelect.innerHTML = '<option value="">Önce fakülte seçiniz...</option>';
+                return;
+            }
+
+            bolumSelect.innerHTML = '<option value="">Yükleniyor...</option>';
+
+            fetch('@Url.Action("GetBolumler", "Account")?fakulteId=' + fakulteId)
+                .then(response => response.json())
+                .then(data => {
+                    bolumSelect.innerHTML = '<option value="">Bölüm seçiniz...</option>';
+                    data.forEach(bolum => {
+                        bolumSelect.innerHTML += `<option value="${bolum.id}">${bolum.bolumAdi}</option>`;
+                    });
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    bolumSelect.innerHTML = '<option value="">Hata oluştu, tekrar deneyin...</option>';
+                });
+        }
+
+        // Şifre eşleşme kontrolü
+        document.getElementById('sifreTekrar').addEventListener('blur', function() {
+            const sifre = document.getElementById('sifre').value;
+            const sifreTekrar = this.value;
+
+            if (sifre !== sifreTekrar) {
+                this.setCustomValidity('Şifreler eşleşmiyor!');
+                this.classList.add('is-invalid');
+            } else {
+                this.setCustomValidity('');
+                this.classList.remove('is-invalid');
+                this.classList.add('is-valid');
+            }
+        });
+
+        // Form submission
+        document.querySelector('form').addEventListener('submit', function(e) {
+            const sifre = document.getElementById('sifre').value;
+            const sifreTekrar = document.getElementById('sifreTekrar').value;
+
+            if (sifre !== sifreTekrar) {
+                e.preventDefault();
+                alert('Şifreler eşleşmiyor!');
+                return;
+            }
+
+            const submitBtn = document.querySelector('button[type="submit"]');
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Kayıt yapılıyor...';
+            submitBtn.disabled = true;
+        });
+    </script>
+}
